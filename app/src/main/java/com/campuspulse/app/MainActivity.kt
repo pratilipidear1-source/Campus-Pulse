@@ -207,10 +207,7 @@ class MainActivity:ComponentActivity(){
      Row(horizontalArrangement=Arrangement.spacedBy(14.dp)){ActionTile("Check in","update a crowd report",Butter,Icons.Default.LocationOn,onCheck);ActionTile("Live Map","explore campus zones",Ink,Icons.Default.Map,onMap,true)}
      Spacer(Modifier.height(24.dp));Section("LIVE NOW","local demo state")
      places.forEach{VenueRow(it,onPlace)}
-     Spacer(Modifier.height(20.dp));Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Color(0xFFE9E3F8)).clickable{onPulse()}.padding(18.dp),verticalAlignment=Alignment.CenterVertically){
- Column(Modifier.weight(1f)){Text("Your campus contribution",fontSize=15.sp,fontWeight=FontWeight.Bold);Text("Open Pulse to see points, streak and reports.",fontSize=12.sp,color=Muted,modifier=Modifier.padding(top=4.dp))}
- Icon(Icons.Default.ChevronRight,"Open Pulse",tint=Ink)
-}
+     Spacer(Modifier.height(20.dp));Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Color(0xFFE9E3F8)).clickable{onPulse()}.padding(18.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text("Your campus contribution",fontSize=15.sp,fontWeight=FontWeight.Bold);Text("Open Pulse to see points, streak and reports.",fontSize=12.sp,color=Muted,modifier=Modifier.padding(top=4.dp))};Icon(Icons.Default.ChevronRight,"Open Pulse",tint=Ink)}
      Spacer(Modifier.height(24.dp))
     }
    }
@@ -241,41 +238,23 @@ class MainActivity:ComponentActivity(){
 }
 
 @Composable private fun LiveMap(places:List<CampusPlace>,onHome:()->Unit,onPlace:(String)->Unit,onCheck:()->Unit,onPulse:()->Unit){
- Scaffold(bottomBar={BottomNav("map",onHome,{},onCheck,onPulse)},containerColor=Paper){p->
-  Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){
-   Header("Aura Heatmap",onBack=onHome)
-   Column(Modifier.padding(horizontal=20.dp)){
-    Eyebrow("LOCAL CAMPUS MAP")
-    Text("Find the quiet pocket.",Modifier.padding(top=6.dp),fontSize=30.sp,fontWeight=FontWeight.ExtraBold)
-    Text("Tap a marker or venue card to inspect it.",Modifier.padding(top=5.dp),fontSize=12.sp,color=Muted)
-    BoxWithConstraints(Modifier.fillMaxWidth().height(390.dp).padding(top=16.dp).clip(RoundedCornerShape(30.dp)).background(Ink)){
-     val mapWidth=maxWidth.value
-     val mapHeight=390f
-     Canvas(Modifier.fillMaxSize()){
-      places.forEachIndexed { i,v ->
-       val x=.15f+(i*.17f)
-       val y=.22f+(i%2)*.28f
-       drawCircle(crowdColor(v.crowd).copy(.45f),55f+v.crowd*.42f,Offset(size.width*x,size.height*y))
-      }
-      for(i in 0..7)drawLine(Color.White.copy(.07f),Offset(i*size.width/7f,0f),Offset(i*size.width/7f,size.height),1f)
-      for(i in 0..8)drawLine(Color.White.copy(.06f),Offset(0f,i*size.height/8f),Offset(size.width,i*size.height/8f),1f)
-     }
-     Row(Modifier.align(Alignment.TopStart).padding(14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){
-      PillTag("EMPTY",Sage);PillTag("OKAY",Butter);PillTag("PACKED",Coral)
-     }
-     places.forEachIndexed { i,v ->
-      val x=.15f+(i*.17f)
-      val y=.22f+(i%2)*.28f
-      MapMarker(v.name,x,y,crowdColor(v.crowd),mapWidth,mapHeight){onPlace(v.name)}
-     }
+ Scaffold(bottomBar={BottomNav("map",onHome,{},onCheck,onPulse)},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){
+  Header("Aura Heatmap",onBack=onHome);Column(Modifier.padding(horizontal=20.dp)){
+   Eyebrow("LOCAL CAMPUS MAP");Text("Find the quiet pocket.",Modifier.padding(top=6.dp),fontSize=30.sp,fontWeight=FontWeight.ExtraBold)
+   Text("Tap a marker or venue card to inspect it.",Modifier.padding(top=5.dp),fontSize=12.sp,color=Muted)
+   BoxWithConstraints(Modifier.fillMaxWidth().height(390.dp).padding(top=16.dp).clip(RoundedCornerShape(30.dp)).background(Ink)){
+    val mapWidth=maxWidth.value;val mapHeight=390f
+    Canvas(Modifier.fillMaxSize()){
+     places.forEachIndexed{i,v->val x=.15f+(i*.17f);val y=.22f+(i%2)*.28f;drawCircle(crowdColor(v.crowd).copy(.45f),55f+v.crowd*.42f,Offset(size.width*x,size.height*y))}
+     for(i in 0..7)drawLine(Color.White.copy(.07f),Offset(i*size.width/7f,0f),Offset(i*size.width/7f,size.height),1f)
+     for(i in 0..8)drawLine(Color.White.copy(.06f),Offset(0f,i*size.height/8f),Offset(size.width,i*size.height/8f),1f)
     }
-    Spacer(Modifier.height(18.dp))
-    Section("NEARBY PULSE","tap a zone")
-    places.forEach{VenueRow(it,onPlace)}
-    Spacer(Modifier.height(25.dp))
+    Row(Modifier.align(Alignment.TopStart).padding(14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){PillTag("EMPTY",Sage);PillTag("OKAY",Butter);PillTag("PACKED",Coral)}
+    places.forEachIndexed{i,v->{val x=.15f+(i*.17f);val y=.22f+(i%2)*.28f;MapMarker(v.name,x,y,crowdColor(v.crowd),mapWidth,mapHeight){onPlace(v.name)}}}
    }
+   Spacer(Modifier.height(18.dp));Section("NEARBY PULSE","tap a zone");places.forEach{VenueRow(it,onPlace)};Spacer(Modifier.height(25.dp))
   }
- }
+ }}
 }
 @Composable private fun MapMarker(label:String,x:Float,y:Float,c:Color,mapWidth:Float,mapHeight:Float,onClick:()->Unit){
  Column(Modifier.offset(x=(mapWidth*x-17).dp,y=(mapHeight*y-17).dp).clickable(onClick=onClick),horizontalAlignment=Alignment.CenterHorizontally){
@@ -309,33 +288,25 @@ Quote("Local demo state · future versions can connect this venue to live report
  val tags=listOf("🔌 Outlets open","❄️ AC is frosty","🤫 Pure silence","🔊 Rising noise")
  var selectedTags by rememberSaveable{mutableStateOf(place.ambientTags)}
  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).background(Paper).statusBarsPadding()){
-  Header("Tactile Telemetry",onBack)
-  Box(Modifier.fillMaxWidth().height(190.dp).background(Color(0xFFDDD9D2)),contentAlignment=Alignment.Center){PetalGraphic(Modifier.size(135.dp))}
+  Header("Tactile Telemetry",onBack);Box(Modifier.fillMaxWidth().height(190.dp).background(Color(0xFFDDD9D2)),contentAlignment=Alignment.Center){PetalGraphic(Modifier.size(135.dp))}
   Column(Modifier.padding(horizontal=20.dp)){
    Spacer(Modifier.height(14.dp))
-   Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(WarmGray).padding(10.dp),verticalAlignment=Alignment.CenterVertically){
-    Icon(Icons.Default.LocationOn,null,Modifier.size(16.dp))
-    Text(place.name,Modifier.weight(1f).padding(start=8.dp),fontSize=12.sp,fontWeight=FontWeight.Bold)
-    PillTag("LOCAL DEMO",Sage)
-   }
+   Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(WarmGray).padding(10.dp),verticalAlignment=Alignment.CenterVertically){Icon(Icons.Default.LocationOn,null,Modifier.size(16.dp));Text(place.name,Modifier.weight(1f).padding(start=8.dp),fontSize=12.sp,fontWeight=FontWeight.Bold);PillTag("LOCAL DEMO",Sage)}
    Text("How’s the crowd\nright now?",Modifier.padding(top=18.dp),fontSize=34.sp,lineHeight=37.sp,fontWeight=FontWeight.ExtraBold)
    Text("Choose the condition that best matches what you see. This updates only the local prototype state.",Modifier.padding(top=7.dp),fontSize=13.sp,lineHeight=19.sp,color=Muted)
-   Spacer(Modifier.height(14.dp))
-   options.forEachIndexed{i,o->Selector(o.first,o.second,selected==i){selected=i}}
-   Spacer(Modifier.height(18.dp))
-   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("Ambient Micro-tags",fontSize=12.sp,fontWeight=FontWeight.Bold);Text("Optional",fontSize=12.sp,color=Muted)}
+   Spacer(Modifier.height(14.dp));options.forEachIndexed{i,o->Selector(o.first,o.second,selected==i){selected=i}}
+   Spacer(Modifier.height(18.dp));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("Ambient Micro-tags",fontSize=12.sp,fontWeight=FontWeight.Bold);Text("Optional",fontSize=12.sp,color=Muted)}
    Row(Modifier.fillMaxWidth().padding(top=10.dp).horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)){tags.forEach{tag->SelectableTag(tag,selectedTags.contains(tag)){selectedTags=if(selectedTags.contains(tag))selectedTags-tag else selectedTags+tag}}}
    Button({onDone(selected,selectedTags)},Modifier.fillMaxWidth().padding(top=20.dp).height(58.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Icon(Icons.Default.CheckCircle,null,modifier=Modifier.size(18.dp));Text("  Submit Report  •  +10 Pulse Points",fontWeight=FontWeight.Bold)}
-   Text("Saved locally on this device · no database or live service used",Modifier.fillMaxWidth().padding(vertical=12.dp),f@Composable private fun VenuePicker(places:List<CampusPlace>,onBack:()->Unit,onContinue:(String)->Unit){
+   Text("Saved locally on this device · no database or live service used",Modifier.fillMaxWidth().padding(vertical=12.dp),fontSize=10.sp,color=Muted,textAlign=TextAlign.Center);Spacer(Modifier.height(24.dp))
+  }
+}
+@Composable private fun VenuePicker(places:List<CampusPlace>,onBack:()->Unit,onContinue:(String)->Unit){
+ var selected by rememberSaveable{mutableStateOf(places.firstOrNull()?.name?:"")}
  Scaffold(containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
-  Header("Choose Venue",onBack)
-  Eyebrow("CHECK-IN")
-  Text("Where are you right now?",Modifier.padding(top=8.dp),fontSize=32.sp,fontWeight=FontWeight.ExtraBold)
-  Text("Pick the place you want your local report to update.",Modifier.padding(top=6.dp),fontSize=13.sp,color=Muted)
-  Spacer(Modifier.height(18.dp))
-  var selected by rememberSaveable{mutableStateOf(places.firstOrNull()?.name?:"")}
-  places.forEach{place->
-   val active=selected==place.name
+  Header("Choose Venue",onBack);Eyebrow("CHECK-IN");Text("Where are you right now?",Modifier.padding(top=8.dp),fontSize=32.sp,fontWeight=FontWeight.ExtraBold)
+  Text("Pick the place you want your local report to update.",Modifier.padding(top=6.dp),fontSize=13.sp,color=Muted);Spacer(Modifier.height(18.dp))
+  places.forEach{place->val active=selected==place.name
    Row(Modifier.fillMaxWidth().padding(bottom=10.dp).clip(RoundedCornerShape(22.dp)).background(if(active)LavenderSoft else WarmGray).clickable{selected=place.name}.padding(16.dp),verticalAlignment=Alignment.CenterVertically){
     Box(Modifier.size(48.dp).clip(RoundedCornerShape(15.dp)).background(crowdColor(place.crowd).copy(.75f)),contentAlignment=Alignment.Center){Text(place.crowd.toString()+"%",fontSize=12.sp,fontWeight=FontWeight.ExtraBold)}
     Column(Modifier.weight(1f).padding(start=12.dp)){Text(place.name,fontSize=16.sp,fontWeight=FontWeight.Bold);Text(place.category+" · "+crowdState(place.crowd),fontSize=11.sp,color=Muted,modifier=Modifier.padding(top=3.dp))}
@@ -346,30 +317,19 @@ Quote("Local demo state · future versions can connect this venue to live report
   Spacer(Modifier.height(25.dp))
  }}
 }
-
 @Composable private fun ReportSuccess(venue:String,level:Int,points:Int,onView:()->Unit,onAnother:()->Unit){
- val label=when(level){0->"EMPTY";1->"OKAY";else->"PACKED"}
- val color=when(level){0->Sage;1->Butter;else->CoralStrong}
+ val label=when(level){0->"EMPTY";1->"OKAY";else->"PACKED"};val color=when(level){0->Sage;1->Butter;else->CoralStrong}
  Column(Modifier.fillMaxSize().background(Paper).statusBarsPadding().padding(20.dp),horizontalAlignment=Alignment.CenterHorizontally){
-  Spacer(Modifier.height(65.dp))
-  Box(Modifier.size(88.dp).clip(CircleShape).background(color),contentAlignment=Alignment.Center){Icon(Icons.Default.CheckCircle,null,tint=Ink,modifier=Modifier.size(48.dp))}
-  Eyebrow("REPORT SAVED")
-  Text("Nice pulse.",Modifier.padding(top=12.dp),fontSize=38.sp,fontWeight=FontWeight.ExtraBold)
-  Text("Your local report updated the demo state for",Modifier.padding(top=7.dp),fontSize=13.sp,color=Muted,textAlign=TextAlign.Center)
-  Text(venue,Modifier.padding(top=3.dp),fontSize=18.sp,fontWeight=FontWeight.Bold,textAlign=TextAlign.Center)
+  Spacer(Modifier.height(65.dp));Box(Modifier.size(88.dp).clip(CircleShape).background(color),contentAlignment=Alignment.Center){Icon(Icons.Default.CheckCircle,null,tint=Ink,modifier=Modifier.size(48.dp))}
+  Eyebrow("REPORT SAVED");Text("Nice pulse.",Modifier.padding(top=12.dp),fontSize=38.sp,fontWeight=FontWeight.ExtraBold)
+  Text("Your local report updated the demo state for",Modifier.padding(top=7.dp),fontSize=13.sp,color=Muted,textAlign=TextAlign.Center);Text(venue,Modifier.padding(top=3.dp),fontSize=18.sp,fontWeight=FontWeight.Bold,textAlign=TextAlign.Center)
   Row(Modifier.padding(top=18.dp).clip(RoundedCornerShape(50.dp)).background(color.copy(.55f)).padding(horizontal=16.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically){Text(label,fontWeight=FontWeight.ExtraBold);Text("  ·  +10 pts",fontSize=12.sp)}
-  Text("Total Pulse Points: $points",Modifier.padding(top=14.dp),fontSize=13.sp,color=Muted)
-  Spacer(Modifier.weight(1f))
+  Text("Total Pulse Points: $points",Modifier.padding(top=14.dp),fontSize=13.sp,color=Muted);Spacer(Modifier.weight(1f))
   Button(onClick=onView,Modifier.fillMaxWidth().height(54.dp),shape=RoundedCornerShape(50.dp),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("View Updated Venue",fontWeight=FontWeight.Bold)}
-  OutlinedButton(onClick=onAnother,Modifier.fillMaxWidth().padding(top=10.dp).height(52.dp),shape=RoundedCornerShape(50.dp)){Text("Report Another Place")}
-  Spacer(Modifier.height(18.dp))
+  OutlinedButton(onClick=onAnother,Modifier.fillMaxWidth().padding(top=10.dp).height(52.dp),shape=RoundedCornerShape(50.dp)){Text("Report Another Place")};Spacer(Modifier.height(18.dp))
  }
 }
 
-ontSize=10.sp,color=Muted,textAlign=TextAlign.Center)
-   Spacer(Modifier.height(24.dp))
-  }
-}
 @Composable private fun Selector(title:String,desc:String,active:Boolean,onClick:()->Unit){
  Column(Modifier.fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(24.dp)).background(if(active)Color(0xFFDED8F4) else WarmGray).clickable(onClick=onClick).padding(24.dp)){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){PillTag(if(title.startsWith("Chill"))"< 30% OCCUPANCY" else if(title.startsWith("Moderate"))"30–70% OCCUPANCY" else "> 70% OCCUPANCY",Color.White.copy(.8f));Icon(if(active)Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,null,tint=if(active)Ink else Muted)};Text(title,Modifier.padding(top=12.dp),fontSize=20.sp,fontWeight=FontWeight.Bold);Text(desc,Modifier.padding(top=4.dp),fontSize=13.sp,lineHeight=20.sp,color=Muted)}
 }
