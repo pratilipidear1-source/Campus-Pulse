@@ -199,3 +199,6 @@ private val basePlaces=listOf(
 @Composable private fun Pill(label:String,onClick:()->Unit){Button(onClick=onClick,shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink),contentPadding=PaddingValues(horizontal=20.dp,vertical=10.dp)){Text(label,fontSize=14.sp,fontWeight=FontWeight.SemiBold,color=Paper)}}
 @Composable private fun BottomNav(active:String,onHome:()->Unit,onMap:()->Unit,onCheckIn:()->Unit,onPulse:()->Unit){NavigationBar(containerColor=Paper){NavigationBarItem(selected=active=="home",onClick=onHome,icon={Icon(Icons.Default.Home,null)},label={Text("Home")});NavigationBarItem(selected=active=="map",onClick=onMap,icon={Icon(Icons.Default.Map,null)},label={Text("Map")});NavigationBarItem(selected=active=="check",onClick=onCheckIn,icon={Icon(Icons.Default.AddCircleOutline,null)},label={Text("Check in")});NavigationBarItem(selected=active=="pulse",onClick=onPulse,icon={Icon(Icons.Default.EmojiEvents,null)},label={Text("Pulse")})}}
 private fun statusFor(c:Int)=when{c>=70->"PACKED";c>=30->"OKAY";else->"EMPTY"}
+}
+}
+}
