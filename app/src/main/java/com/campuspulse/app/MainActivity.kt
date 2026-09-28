@@ -90,7 +90,7 @@ class MainActivity:ComponentActivity(){
   Surface(Modifier.fillMaxSize(),color=Paper){
    when(screen){
     "onboarding"->Onboarding{screen="home"}
-    "home"->Home(places,{screen="map"},{goPlace(it)},{screen="checkin"},{screen="profile"}){places=loadPlaces(c)}
+    "home"->Home(places,{screen="map"},{goPlace(it)},{screen="checkin"},{screen="profile"},{screen="pulse"}){places=loadPlaces(c)}
     "map"->LiveMap(places,{screen="home"},{goPlace(it)},{screen="checkin"},{screen="pulse"})
     "detail"->PlaceDetail(places.firstOrNull{it.name==placeName}?:defaultPlaces.first(),{screen="map"},{screen="checkin"})
     "checkin"->CheckIn(places.firstOrNull{it.name==placeName}?:defaultPlaces.first(),{screen="detail"}){level->
@@ -99,8 +99,8 @@ class MainActivity:ComponentActivity(){
       points+=10;streak+=1;reports+=1
       saveData(c,points,streak,reports,places);screen="detail"
     }
-    "pulse"->PulseScreen(points,streak,reports,{screen="home"},{screen="profile"})
-    "profile"->ProfileScreen(points,streak,reports,{screen="home"}){
+    "pulse"->PulseScreen(points,streak,reports,{screen="home"},{screen="map"},{screen="checkin"},{screen="profile"})
+    "profile"->ProfileScreen(points,streak,reports,{screen="home"},{screen="map"},{screen="checkin"},{screen="pulse"}){
       points=0;streak=0;reports=0;places=defaultPlaces;saveData(c,0,0,0,places)
     }
    }
@@ -149,11 +149,11 @@ class MainActivity:ComponentActivity(){
 }
 @Composable private fun RowScope.MiniCard(a:String,b:String,c:Color){Column(Modifier.weight(1f).height(72.dp).clip(RoundedCornerShape(16.dp)).background(WarmGray).padding(14.dp),verticalArrangement=Arrangement.SpaceBetween){Text(a,fontSize=11.sp,color=Muted);Row(verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(8.dp).clip(CircleShape).background(c));Text(b,Modifier.padding(start=8.dp),fontSize=13.sp,fontWeight=FontWeight.Bold)}}}
 
-@Composable private fun Home(places:List<CampusPlace>,onMap:()->Unit,onPlace:(String)->Unit,onCheck:()->Unit,onProfile:()->Unit,onRefresh:()->Unit){
+@Composable private fun Home(places:List<CampusPlace>,onMap:()->Unit,onPlace:(String)->Unit,onCheck:()->Unit,onProfile:()->Unit,onPulse:()->Unit,onRefresh:()->Unit){
  var loading by remember{mutableStateOf(false)}
  var error by remember{mutableStateOf(false)}
  val scope=rememberCoroutineScope()
- Scaffold(bottomBar={BottomNav("home",{},onMap,onCheck,{})},containerColor=Paper){p->
+ Scaffold(bottomBar={BottomNav("home",{},onMap,onCheck,onPulse)},containerColor=Paper){p->
   Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
    Header("Campus Pulse",onProfile=onProfile)
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){Eyebrow("OVERVIEW");Row(verticalAlignment=Alignment.CenterVertically){PillTag("LOCAL DEMO",Sage);IconButton(onClick={loading=true;error=false;scope.launch{delay(450);onRefresh();loading=false}}){Icon(Icons.Default.Refresh,"Refresh",tint=Ink)}}}
@@ -273,8 +273,8 @@ class MainActivity:ComponentActivity(){
 }
 @Composable private fun SelectableTag(text:String,selected:Boolean,onClick:()->Unit){Row(Modifier.clip(RoundedCornerShape(50)).background(if(selected)Lavender else WarmGray).clickable(onClick=onClick).padding(horizontal=12.dp,vertical=9.dp),verticalAlignment=Alignment.CenterVertically){if(selected)Icon(Icons.Default.Check,null,tint=Ink,modifier=Modifier.size(13.dp));Text(text,Modifier.padding(start=if(selected)5.dp else 0.dp),fontSize=10.sp,fontWeight=FontWeight.Bold)}}
 
-@Composable private fun PulseScreen(points:Int,streak:Int,reports:Int,onHome:()->Unit,onProfile:()->Unit){
- Scaffold(bottomBar={BottomNav("pulse",onHome,{},{},{})},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
+@Composable private fun PulseScreen(points:Int,streak:Int,reports:Int,onHome:()->Unit,onMap:()->Unit,onCheck:()->Unit,onProfile:()->Unit){
+ Scaffold(bottomBar={BottomNav("pulse",onHome,onMap,onCheck,{})},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
   Header("Pulse",onBack=onHome,onProfile=onProfile);Eyebrow("YOUR CAMPUS CONTRIBUTION");Text("Your pulse.",Modifier.padding(top=8.dp),fontSize=36.sp,fontWeight=FontWeight.ExtraBold);Text("Your reports and streak now work as local frontend state.",Modifier.padding(top=6.dp),fontSize=14.sp,color=Muted)
   Spacer(Modifier.height(20.dp));Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){MetricCard(points.toString(),"Pulse Points",Lavender);MetricCard("🔥 "+streak,"Day Streak",Coral);MetricCard(reports.toString(),"Reports",Sage)}
   Spacer(Modifier.height(24.dp));Section("LOCAL LEADERBOARD","demo");listOf("You" to points,"Campus Scout" to maxOf(80,points+120),"Pulse Friend" to maxOf(50,points-40)).sortedByDescending{it.second}.forEachIndexed{i,item->LeaderboardRow(i+1,item.first,item.second)}
@@ -285,8 +285,8 @@ class MainActivity:ComponentActivity(){
 @Composable private fun MetricCard(value:String,label:String,bg:Color){Column(Modifier.width(108.dp).height(110.dp).clip(RoundedCornerShape(22.dp)).background(bg.copy(.7f)).padding(14.dp),verticalArrangement=Arrangement.SpaceBetween){Text(value,fontSize=23.sp,fontWeight=FontWeight.ExtraBold);Text(label,fontSize=11.sp,color=Muted)}}
 @Composable private fun LeaderboardRow(rank:Int,name:String,score:Int){Row(Modifier.fillMaxWidth().padding(bottom=8.dp).clip(RoundedCornerShape(18.dp)).background(WarmGray).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Text("#"+rank,fontWeight=FontWeight.ExtraBold,modifier=Modifier.width(42.dp));Text(name,Modifier.weight(1f),fontWeight=FontWeight.Bold);Text(score.toString()+" pts",fontSize=12.sp,color=Muted)}}
 
-@Composable private fun ProfileScreen(points:Int,streak:Int,reports:Int,onHome:()->Unit,onReset:()->Unit){
- Scaffold(bottomBar={BottomNav("profile",onHome,{},{},{})},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
+@Composable private fun ProfileScreen(points:Int,streak:Int,reports:Int,onHome:()->Unit,onMap:()->Unit,onCheck:()->Unit,onPulse:()->Unit,onReset:()->Unit){
+ Scaffold(bottomBar={BottomNav("profile",onHome,onMap,onCheck,onPulse)},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
   Header("Profile",onBack=onHome);Box(Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(30.dp)).background(Lavender),contentAlignment=Alignment.Center){Column(horizontalAlignment=Alignment.CenterHorizontally){Box(Modifier.size(58.dp).clip(CircleShape).background(Ink),contentAlignment=Alignment.Center){Icon(Icons.Default.Person,null,tint=Paper)};Text("srijoy",Modifier.padding(top=10.dp),fontSize=22.sp,fontWeight=FontWeight.ExtraBold);Text("Campus Pulse scout",fontSize=12.sp,color=Muted)}}
   Spacer(Modifier.height(18.dp));Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){MetricCard(points.toString(),"Points",LavenderSoft);MetricCard("🔥 "+streak,"Streak",Coral);MetricCard(reports.toString(),"Reports",Sage)}
   Spacer(Modifier.height(22.dp));Section("DEMO SETTINGS","local");Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(WarmGray).padding(16.dp),verticalAlignment=Alignment.CenterVertically){Icon(Icons.Default.Storage,null);Column(Modifier.weight(1f).padding(start=12.dp)){Text("Local persistence",fontWeight=FontWeight.Bold);Text("Enabled on this device",fontSize=11.sp,color=Muted)};PillTag("ON",Sage)}
