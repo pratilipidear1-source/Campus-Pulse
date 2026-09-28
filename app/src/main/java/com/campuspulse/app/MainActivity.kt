@@ -118,7 +118,7 @@ private fun CampusPulseApp() {
     }
 }
 
-@Composable private fun MiniCard(title: String, value: String, accent: Color) {
+@Composable private fun RowScope.MiniCard(title: String, value: String, accent: Color) {
     Column(Modifier.weight(1f).clip(RoundedCornerShape(18.dp)).background(Color(0xFFF2F0ED)).padding(14.dp)) {
         Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
         Text(title, Modifier.padding(top = 10.dp), fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -178,7 +178,7 @@ private val venues = listOf(
     }
 }
 
-@Composable private fun SmallAction(label: String, icon: ImageVector, onClick: () -> Unit) {
+@Composable private fun RowScope.SmallAction(label: String, icon: ImageVector, onClick: () -> Unit) {
     Button(onClick, Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(18.dp), colors = ButtonDefaults.buttonColors(containerColor = Ink)) {
         Icon(icon, null, Modifier.size(18.dp)); Spacer(Modifier.width(7.dp)); Text(label, fontWeight = FontWeight.Bold)
     }
@@ -245,7 +245,7 @@ private val venues = listOf(
         val values = listOf(.18f,.25f,.34f,.55f,.43f,.22f,.18f,.64f,.82f,.52f,.30f,.16f)
         val w = size.width / values.size
         values.forEachIndexed { i, v ->
-            drawRoundRect(if (i == 5) CoralStrong else LavenderDark.copy(.65f), androidx.compose.ui.geometry.Offset(i*w+5, size.height-v*size.height), androidx.compose.ui.geometry.Size(w-10, v*size.height), 7f, 7f)
+            drawRoundRect(color = if (i == 5) CoralStrong else LavenderDark.copy(.65f), topLeft = androidx.compose.ui.geometry.Offset(i*w+5, size.height-v*size.height), size = androidx.compose.ui.geometry.Size(w-10, v*size.height), cornerRadius = androidx.compose.ui.geometry.CornerRadius(7f, 7f))
         }
     }
 }
