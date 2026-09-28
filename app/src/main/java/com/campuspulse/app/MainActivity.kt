@@ -1,5 +1,6 @@
 package com.campuspulse.app
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -24,6 +26,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val Paper=Color(0xFFFBF9F6)
 private val Ink=Color(0xFF1B1C1A)
@@ -49,16 +54,37 @@ class MainActivity:ComponentActivity(){
 }
 
 @Composable private fun CampusPulseApp(){
- var screen by remember{mutableStateOf("onboarding")}
- var place by remember{mutableStateOf("Studio Green Library")}
+ val context=LocalContext.current
+ val prefs=remember{context.getSharedPreferences("campus_pulse_demo",Context.MODE_PRIVATE)}
+ var screen by rememberSaveable{mutableStateOf("onboarding")}
+ var previousScreen by rememberSaveable{mutableStateOf("home")}
+ var placeName by rememberSaveable{mutableStateOf("Studio Green Library")}
+ var points by rememberSaveable{mutableIntStateOf(prefs.getInt("points",120))}
+ var streak by rememberSaveable{mutableIntStateOf(prefs.getInt("streak",14))}
+ var reports by rememberSaveable{mutableIntStateOf(prefs.getInt("reports",0))}
+ var crowds by remember{mutableStateOf(basePlaces.associate{it.name to it.crowd})}
+ var dataState by rememberSaveable{mutableStateOf("ready")}
+ var profileOpen by rememberSaveable{mutableStateOf(false)}
+ val scope=rememberCoroutineScope()
+ fun saveStats(){prefs.edit().putInt("points",points).putInt("streak",streak).putInt("reports",reports).apply()}
+ fun go(s:String){previousScreen=screen;screen=s}
+ fun submit(place:String,level:Int,tags:List<String>){
+  val old=crowds[place]?:0
+  val target=when(level){0->20;1->50;else->85}
+  crowds=crowds+(place to ((old*2+target)/3).coerceIn(0,100))
+  points+=10;streak+=1;reports+=1;saveStats();placeName=place;screen="detail"
+ }
  MaterialTheme(colorScheme=lightColorScheme(background=Paper,surface=Paper,primary=Ink)){
   Surface(Modifier.fillMaxSize(),color=Paper){
-   when(screen){
+   if(profileOpen){Profile(points,streak,reports){profileOpen=false}}
+   else when(screen){
     "onboarding"->Onboarding{screen="home"}
-    "home"->Home({screen="map"},{place=it;screen="detail"},{screen="checkin"})
-    "map"->LiveMap({screen="home"},{place=it;screen="detail"})
-    "detail"->PlaceDetail(place,{screen="map"},{screen="checkin"})
-    else->CheckIn({screen="detail"}){screen="home"}
+    "home"->Home(crowds,dataState,{dataState="loading";scope.launch{delay(700);dataState="ready"}},{placeName=it;screen="detail"},{go("map")},{go("checkin")},{go("pulse")},{profileOpen=true})
+    "map"->LiveMap(crowds,{screen="home"},{placeName=it;screen="detail"},{go("checkin")},{go("pulse")},{profileOpen=true})
+    "detail"->PlaceDetail(basePlaces.firstOrNull{it.name==placeName}?:basePlaces.first(),crowds[placeName]?:14,{screen="map"},{go("checkin")},{go("home")},{go("pulse")},{profileOpen=true})
+    "checkin"->CheckIn(placeName,{screen=previousScreen.ifBlank{"home"}},{place,level,tags->submit(place,level,tags)},{go("home")},{go("map")},{go("pulse")},{profileOpen=true})
+    "pulse"->Pulse(points,streak,reports,{go("home")},{go("map")},{go("checkin")},{profileOpen=true})
+    else->Home(crowds,dataState,{}, {placeName=it;screen="detail"},{go("map")},{go("checkin")},{go("pulse")},{profileOpen=true})
    }
   }
  }
@@ -118,12 +144,15 @@ class MainActivity:ComponentActivity(){
  Column(Modifier.weight(1f).height(72.dp).clip(RoundedCornerShape(16.dp)).background(WarmGray).padding(14.dp),verticalArrangement=Arrangement.SpaceBetween){Text(a,fontSize=11.sp,color=Muted,maxLines=1);Row(verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(8.dp).clip(CircleShape).background(c));Text(b,Modifier.padding(start=8.dp),fontSize=13.sp,fontWeight=FontWeight.Bold)}}
 }
 
-private val places=listOf(
- "Studio Green Library" to Pair(14,"EMPTY"),
- "Arrillaga Dining" to Pair(84,"PACKED"),
- "Tresidder Gym" to Pair(71,"PACKED"),
- "CoHo Coffee House" to Pair(58,"OKAY"),
- "Huang Mac Lab" to Pair(31,"CHILL")
+data class PlaceData(
+ val name:String,val category:String,val zone:String,val crowd:Int,val noise:String,val outlets:String,val temperature:String,val buzz:List<String>
+)
+private val basePlaces=listOf(
+ PlaceData("Studio Green Library","Library","East Quad / Quiet Sanctuary",14,"28 dB · Whisper","92% free","68°F",listOf("North-facing window pods have incredible afternoon sunshine right now.","Printing station on 2F was just restocked.")),
+ PlaceData("Arrillaga Dining","Dining","Central Campus / Dining Hub",84,"72 dB · Busy","18% free","70°F",listOf("Lunch queue is moving quickly near Hub B.","Outdoor tables have a few open spots.")),
+ PlaceData("Tresidder Gym","Gym","Student Center / Fitness Wing",71,"64 dB · Energetic","42% free","69°F",listOf("Cardio floor is filling up.","Free weights have short waits right now.")),
+ PlaceData("CoHo Coffee House","Cafe","Old Union / South Terrace",58,"55 dB · Social","31% free","67°F",listOf("Window seats are turning over quickly.","The west counter has a short line.")),
+ PlaceData("Huang Mac Lab","Lab","Engineering Quad / Lab Row",31,"36 dB · Focused","76% free","66°F",listOf("Plenty of open workstations.","Quiet zone is especially calm today."))
 )
 
 @Composable private fun Home(onMap:()->Unit,onPlace:(String)->Unit,onCheckIn:()->Unit){
