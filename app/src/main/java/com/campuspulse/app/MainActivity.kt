@@ -99,12 +99,12 @@ class MainActivity:ComponentActivity(){
  }
 }
 
-@Composable private fun Header(title:String,onBack:(()->Unit)?=null){
+@Composable private fun Header(title:String,onBack:(()->Unit)?=null,onProfile:(()->Unit)?=null){
  Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal=20.dp),verticalAlignment=Alignment.CenterVertically){
   if(onBack!=null)IconButton(onClick=onBack){Icon(Icons.Default.ArrowBack,"Back",tint=Ink)}
   PulseLogo(Modifier.size(32.dp))
   Text(title,Modifier.padding(start=8.dp).weight(1f),fontSize=20.sp,fontWeight=FontWeight.ExtraBold)
-  Box(Modifier.size(32.dp).clip(CircleShape).background(Ink),contentAlignment=Alignment.Center){Icon(Icons.Default.PersonOutline,null,tint=Paper,modifier=Modifier.size(18.dp))}
+  if(onProfile!=null)IconButton(onClick=onProfile){Box(Modifier.size(32.dp).clip(CircleShape).background(Ink),contentAlignment=Alignment.Center){Icon(Icons.Default.PersonOutline,null,tint=Paper,modifier=Modifier.size(18.dp))}}
  }
 }
 
@@ -155,97 +155,31 @@ private val basePlaces=listOf(
  PlaceData("Huang Mac Lab","Lab","Engineering Quad / Lab Row",31,"36 dB · Focused","76% free","66°F",listOf("Plenty of open workstations.","Quiet zone is especially calm today."))
 )
 
-@Composable private fun Home(onMap:()->Unit,onPlace:(String)->Unit,onCheckIn:()->Unit){
- Scaffold(bottomBar={BottomNav("home",{},onMap,onCheckIn)},containerColor=Paper){p->
-  Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
-   Spacer(Modifier.height(4.dp));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Eyebrow("OVERVIEW");PillTag("LIVE",Sage)}
-   Text("hey srijoy,",Modifier.padding(top=8.dp),fontSize=36.sp,fontWeight=FontWeight.ExtraBold,letterSpacing=(-1.8).sp)
-   Text("make your day easy · live flow updates",fontSize=14.sp,color=Muted)
-   Spacer(Modifier.height(24.dp));HomeHero{onPlace("Tresidder Gym")};Spacer(Modifier.height(14.dp))
-   Row(horizontalArrangement=Arrangement.spacedBy(14.dp)){ActionTile("Check in","verify crowd level",Butter,Icons.Default.LocationOn,onCheckIn);ActionTile("Live Map","4 zones surging",Ink,Icons.Default.Map,onMap,true)}
-   Spacer(Modifier.height(24.dp));Section("live now","auto-syncing")
-   places.forEach{(name,state)->VenueRow(name,state.first,state.second,onPlace)}
-   Spacer(Modifier.height(16.dp));Section("COMMUNITY SNAPSHOT","Meyer Green Lawn")
-   Box(Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(28.dp)).background(Color(0xFFE9E3F8)),contentAlignment=Alignment.BottomStart){Column(Modifier.padding(18.dp)){Text("Sunset Gathering on Meyer Green",fontSize=15.sp,fontWeight=FontWeight.Bold);Text("outdoor acoustic session · optimal vibes",fontSize=12.sp,color=Muted,modifier=Modifier.padding(top=4.dp))}}
-   Spacer(Modifier.height(24.dp))
-  }
- }
-}
-
-@Composable private fun HomeHero(onClick:()->Unit){
- Box(Modifier.fillMaxWidth().height(252.dp).clip(RoundedCornerShape(28.dp)).background(Lavender).clickable(onClick=onClick)){
-  Box(Modifier.size(192.dp).offset(190.dp,(-46).dp).clip(CircleShape).blur(16.dp).background(Color.White.copy(.35f)))
-  Column(Modifier.fillMaxSize().padding(24.dp)){
-   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){PillTag("FEATURED VENUE",Color.White.copy(.55f));PillTag("84% PACKED",CoralStrong)}
-   Spacer(Modifier.height(18.dp));Text("Tresidder Gym",fontSize=30.sp,fontWeight=FontWeight.ExtraBold);Text("Peak window · expect a 12 min wait",fontSize=14.sp,color=Muted,modifier=Modifier.padding(top=8.dp));Spacer(Modifier.weight(1f));Text("NOW · 2.1k reports this week",fontSize=11.sp,color=Muted)
-  }
- }
-}
-
-@Composable private fun RowScope.ActionTile(title:String,sub:String,bg:Color,icon:ImageVector,onClick:()->Unit,dark:Boolean=false){
- Column(Modifier.weight(1f).height(175.dp).clip(RoundedCornerShape(24.dp)).background(bg).clickable(onClick=onClick).padding(20.dp)){
-  Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Icon(icon,null,tint=if(dark)Paper else Ink,modifier=Modifier.size(18.dp));PillTag(if(dark)"LIVE" else "QUICK",if(dark)Color.White.copy(.12f) else Color.White.copy(.55f),dark)}
-  Spacer(Modifier.weight(1f));Text(title,fontSize=21.sp,fontWeight=FontWeight.Bold,color=if(dark)Paper else Ink);Text(sub,fontSize=11.sp,color=if(dark)Color.White.copy(.7f) else Muted,modifier=Modifier.padding(top=4.dp))
- }
-}
-
+@Composable private fun Home(crowds:Map<String,Int>,dataState:String,onRefresh:()->Unit,onPlace:(String)->Unit,onMap:()->Unit,onCheckIn:()->Unit,onPulse:()->Unit,onProfile:()->Unit){
+ Scaffold(bottomBar={BottomNav("home",{},onMap,onCheckIn,onPulse)},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
+ Spacer(Modifier.height(4.dp));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){Eyebrow("OVERVIEW");Row(verticalAlignment=Alignment.CenterVertically){PillTag(if(dataState=="loading")"SYNCING" else "LIVE",if(dataState=="loading")Butter else Sage);IconButton(onClick=onRefresh){Icon(Icons.Default.Refresh,"Refresh",tint=Ink)}}}
+ if(dataState=="loading")StatusCard("Refreshing campus pulse…","Local demo data is syncing.",LavenderSoft,Icons.Default.Sync) else if(dataState=="error")StatusCard("Couldn’t refresh","Your saved campus snapshot is still available.",Coral,Icons.Default.Warning) else if(crowds.isEmpty())StatusCard("No venues yet","No campus zones are available in this demo.",WarmGray,Icons.Default.Place)
+ Text("hey srijoy,",Modifier.padding(top=8.dp),fontSize=36.sp,fontWeight=FontWeight.ExtraBold,letterSpacing=(-1.8).sp);Text("make your day easy · local flow updates",fontSize=14.sp,color=Muted);Spacer(Modifier.height(24.dp))
+ HomeHero(crowds["Tresidder Gym"]?:71){onPlace("Tresidder Gym")};Spacer(Modifier.height(14.dp));Row(horizontalArrangement=Arrangement.spacedBy(14.dp)){ActionTile("Check in","verify crowd level",Butter,Icons.Default.LocationOn,onCheckIn);ActionTile("Live Map","tap a zone",Ink,Icons.Default.Map,onMap,true)};Spacer(Modifier.height(24.dp));Section("live now","frontend demo telemetry")
+ if(crowds.isEmpty())EmptyState("No crowd snapshots yet.","Try refreshing the demo.",onRefresh) else basePlaces.forEach{v->val c=crowds[v.name]?:v.crowd;VenueRow(v.name,c,statusFor(c),onPlace)}
+ Spacer(Modifier.height(16.dp));Section("COMMUNITY SNAPSHOT","Meyer Green Lawn");Box(Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(28.dp)).background(Color(0xFFE9E3F8)),contentAlignment=Alignment.BottomStart){Column(Modifier.padding(18.dp)){Text("Sunset Gathering on Meyer Green",fontSize=15.sp,fontWeight=FontWeight.Bold);Text("outdoor acoustic session · optimal vibes",fontSize=12.sp,color=Muted,modifier=Modifier.padding(top=4.dp))}};Spacer(Modifier.height(24.dp))
+}}
+@Composable private fun StatusCard(title:String,sub:String,bg:Color,icon:ImageVector){Row(Modifier.fillMaxWidth().padding(top=12.dp).clip(RoundedCornerShape(18.dp)).background(bg).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Icon(icon,null,tint=Ink);Column(Modifier.padding(start=10.dp)){Text(title,fontSize=13.sp,fontWeight=FontWeight.Bold);Text(sub,fontSize=11.sp,color=Muted,modifier=Modifier.padding(top=2.dp))}}}
+@Composable private fun EmptyState(title:String,sub:String,onRetry:()->Unit){Column(Modifier.fillMaxWidth().padding(vertical=24.dp),horizontalAlignment=Alignment.CenterHorizontally){Icon(Icons.Default.CloudOff,null,tint=Muted,modifier=Modifier.size(34.dp));Text(title,Modifier.padding(top=8.dp),fontSize=14.sp,fontWeight=FontWeight.Bold);Text(sub,fontSize=11.sp,color=Muted,modifier=Modifier.padding(top=3.dp));TextButton(onClick=onRetry){Text("Try again")}}}
+@Composable private fun HomeHero(crowd:Int,onClick:()->Unit){Box(Modifier.fillMaxWidth().height(252.dp).clip(RoundedCornerShape(28.dp)).background(Lavender).clickable(onClick=onClick)){Box(Modifier.size(192.dp).offset(190.dp,(-46).dp).clip(CircleShape).blur(16.dp).background(Color.White.copy(.35f)));Column(Modifier.fillMaxSize().padding(24.dp)){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){PillTag("FEATURED VENUE",Color.White.copy(.55f));PillTag(crowd.toString()+"% "+statusFor(crowd),CoralStrong)};Spacer(Modifier.height(18.dp));Text("Tresidder Gym",fontSize=30.sp,fontWeight=FontWeight.ExtraBold);Text(if(crowd>70)"Peak window · expect a 12 min wait" else "Moderate flow · spots are opening up",fontSize=14.sp,color=Muted,modifier=Modifier.padding(top=8.dp));Spacer(Modifier.weight(1f));Text("NOW · local demo snapshot",fontSize=11.sp,color=Muted)}}}
+@Composable private fun RowScope.ActionTile(title:String,sub:String,bg:Color,icon:ImageVector,onClick:()->Unit,dark:Boolean=false){Column(Modifier.weight(1f).height(175.dp).clip(RoundedCornerShape(24.dp)).background(bg).clickable(onClick=onClick).padding(20.dp)){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Icon(icon,null,tint=if(dark)Paper else Ink,modifier=Modifier.size(18.dp));PillTag(if(dark)"LIVE" else "QUICK",if(dark)Color.White.copy(.12f) else Color.White.copy(.55f),dark)};Spacer(Modifier.weight(1f));Text(title,fontSize=21.sp,fontWeight=FontWeight.Bold,color=if(dark)Paper else Ink);Text(sub,fontSize=11.sp,color=if(dark)Color.White.copy(.7f) else Muted,modifier=Modifier.padding(top=4.dp))}}
 @Composable private fun Section(a:String,b:String){Row(Modifier.fillMaxWidth().padding(bottom=10.dp),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){Text(a,fontSize=12.sp,fontWeight=FontWeight.Bold,letterSpacing=1.sp);Text(b,fontSize=11.sp,color=Muted)}}
+@Composable private fun VenueRow(name:String,percent:Int,state:String,onPlace:(String)->Unit){val bg=when(state){"PACKED"->Coral;"OKAY"->Butter;else->Sage};Row(Modifier.fillMaxWidth().padding(bottom=10.dp).clip(RoundedCornerShape(20.dp)).background(bg.copy(.55f)).clickable{onPlace(name)}.padding(16.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(52.dp).clip(RoundedCornerShape(16.dp)).background(bg.copy(.8f)),contentAlignment=Alignment.Center){Text(percent.toString()+"%",fontSize=13.sp,fontWeight=FontWeight.ExtraBold)};Column(Modifier.weight(1f).padding(start=14.dp)){Text(name,fontSize=16.sp,fontWeight=FontWeight.Bold);Text("frontend demo telemetry · saved locally",fontSize=11.sp,color=Muted,modifier=Modifier.padding(top=3.dp))};PillTag(state,Color.White.copy(.85f))}}
 
-@Composable private fun VenueRow(name:String,percent:Int,state:String,onPlace:(String)->Unit){
- val bg=when(state){"PACKED"->Coral;"OKAY"->Butter;else->Sage}
- Row(Modifier.fillMaxWidth().padding(bottom=10.dp).clip(RoundedCornerShape(20.dp)).background(bg.copy(.55f)).clickable{onPlace(name)}.padding(16.dp),verticalAlignment=Alignment.CenterVertically){
-  Box(Modifier.size(52.dp).clip(RoundedCornerShape(16.dp)).background(bg.copy(.8f)),contentAlignment=Alignment.Center){Text("$percent%",fontSize=13.sp,fontWeight=FontWeight.ExtraBold)}
-  Column(Modifier.weight(1f).padding(start=14.dp)){Text(name,fontSize=16.sp,fontWeight=FontWeight.Bold);Text("live crowd telemetry · updated now",fontSize=11.sp,color=Muted,modifier=Modifier.padding(top=3.dp))}
-  PillTag(state,Color.White.copy(.85f))
- }
-}
+@Composable private fun LiveMap(crowds:Map<String,Int>,onHome:()->Unit,onPlace:(String)->Unit,onCheckIn:()->Unit,onPulse:()->Unit,onProfile:()->Unit){
+ Scaffold(bottomBar={BottomNav("map",onHome,{},onCheckIn,onPulse)},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){Header("Aura Heatmap",onHome,onProfile);Column(Modifier.padding(horizontal=20.dp)){Eyebrow("LIVE CAMPUS MAP");Text("Find the quiet pocket.",Modifier.padding(top=6.dp),fontSize=30.sp,fontWeight=FontWeight.ExtraBold);Box(Modifier.fillMaxWidth().height(420.dp).padding(top=18.dp).clip(RoundedCornerShape(30.dp)).background(Ink)){Canvas(Modifier.fillMaxSize()){drawCircle(Sage.copy(.55f),90f,Offset(size.width*.25f,size.height*.35f));drawCircle(CoralStrong.copy(.45f),120f,Offset(size.width*.72f,size.height*.55f));drawCircle(Butter.copy(.38f),95f,Offset(size.width*.52f,size.height*.72f));drawCircle(Lavender.copy(.28f),100f,Offset(size.width*.78f,size.height*.25f));for(i in 0..7)drawLine(Color.White.copy(.07f),Offset(i*size.width/7f,0f),Offset(i*size.width/7f,size.height),1f);for(i in 0..8)drawLine(Color.White.copy(.06f),Offset(0f,i*size.height/8f),Offset(size.width,i*size.height/8f),1f)};Row(Modifier.align(Alignment.TopStart).padding(14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){PillTag("EMPTY",Sage);PillTag("OKAY",Butter);PillTag("PACKED",Coral)};MapMarker("LIBRARY",.22f,.38f,crowds["Studio Green Library"]?:14,Sage){onPlace("Studio Green Library")};MapMarker("DINING",.70f,.25f,crowds["Arrillaga Dining"]?:84,CoralStrong){onPlace("Arrillaga Dining")};MapMarker("GYM",.56f,.70f,crowds["Tresidder Gym"]?:71,CoralStrong){onPlace("Tresidder Gym")}};Spacer(Modifier.height(18.dp));Section("NEARBY PULSE","tap a zone");basePlaces.take(3).forEach{v->val c=crowds[v.name]?:v.crowd;VenueRow(v.name,c,statusFor(c),onPlace)};Spacer(Modifier.height(30.dp))}}}}
+@Composable private fun MapMarker(label:String,x:Float,y:Float,crowd:Int,c:Color,onClick:()->Unit){Column(Modifier.offset(x=(330*x).dp,y=(380*y).dp).clickable(onClick=onClick),horizontalAlignment=Alignment.CenterHorizontally){Box(Modifier.size(34.dp).clip(CircleShape).background(c),contentAlignment=Alignment.Center){Icon(Icons.Default.LocationOn,null,tint=Ink,modifier=Modifier.size(18.dp))};Text(label+" · "+crowd+"%",fontSize=9.sp,fontWeight=FontWeight.Bold,color=Paper,modifier=Modifier.padding(top=2.dp))}}
 
-@Composable private fun LiveMap(onBack:()->Unit,onPlace:(String)->Unit){
- Scaffold(bottomBar={BottomNav("map",{}, {}, {})},containerColor=Paper){p->
-  Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){
-   Header("Aura Heatmap",onBack);Column(Modifier.padding(horizontal=20.dp)){
-    Eyebrow("LIVE CAMPUS MAP");Text("Find the quiet pocket.",Modifier.padding(top=6.dp),fontSize=30.sp,fontWeight=FontWeight.ExtraBold)
-    Box(Modifier.fillMaxWidth().height(420.dp).padding(top=18.dp).clip(RoundedCornerShape(30.dp)).background(Ink)){
-     Canvas(Modifier.fillMaxSize()){
-      drawCircle(Sage.copy(.55f),90f,Offset(size.width*.25f,size.height*.35f));drawCircle(CoralStrong.copy(.45f),120f,Offset(size.width*.72f,size.height*.55f));drawCircle(Butter.copy(.38f),95f,Offset(size.width*.52f,size.height*.72f));drawCircle(Lavender.copy(.28f),100f,Offset(size.width*.78f,size.height*.25f))
-      for(i in 0..7)drawLine(Color.White.copy(.07f),Offset(i*size.width/7f,0f),Offset(i*size.width/7f,size.height),1f)
-      for(i in 0..8)drawLine(Color.White.copy(.06f),Offset(0f,i*size.height/8f),Offset(size.width,i*size.height/8f),1f)
-     }
-     Row(Modifier.align(Alignment.TopStart).padding(14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){PillTag("EMPTY",Sage);PillTag("OKAY",Butter);PillTag("PACKED",Coral)}
-     MapMarker("LIBRARY",.22f,.38f,Sage){onPlace("Studio Green Library")};MapMarker("DINING",.70f,.25f,CoralStrong){onPlace("Arrillaga Dining")};MapMarker("GYM",.56f,.70f,CoralStrong){onPlace("Tresidder Gym")}
-    }
-    Spacer(Modifier.height(18.dp));Section("NEARBY PULSE","tap a zone")
-    VenueRow("Studio Green Library",14,"EMPTY",onPlace);VenueRow("Arrillaga Dining",84,"PACKED",onPlace);VenueRow("Tresidder Gym",71,"PACKED",onPlace)
-    Spacer(Modifier.height(30.dp))
-   }
-  }
- }
-}
-
-@Composable private fun MapMarker(label:String,x:Float,y:Float,c:Color,onClick:()->Unit){
- Box(Modifier.fillMaxSize(),contentAlignment=Alignment.TopStart){Column(Modifier.offset(x=(330*x).dp,y=(380*y).dp).clickable(onClick=onClick),horizontalAlignment=Alignment.CenterHorizontally){Box(Modifier.size(34.dp).clip(CircleShape).background(c),contentAlignment=Alignment.Center){Icon(Icons.Default.LocationOn,null,tint=Ink,modifier=Modifier.size(18.dp))};Text(label,fontSize=9.sp,fontWeight=FontWeight.Bold,color=Paper,modifier=Modifier.padding(top=2.dp))}}
-}
-
-@Composable private fun PlaceDetail(place:String,onBack:()->Unit,onCheckIn:()->Unit){
- Scaffold(bottomBar={Box(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Button(onCheckIn,Modifier.fillMaxWidth().height(56.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("I am here — Check In",fontSize=16.sp,fontWeight=FontWeight.Bold);Text("  +10 pts",fontSize=13.sp)}}},containerColor=Paper){p->
-  Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){Header("Studio Green Library",onBack);Column(Modifier.padding(horizontal=20.dp)){
-   Box(Modifier.fillMaxWidth().height(355.dp).clip(RoundedCornerShape(32.dp)).background(LavenderSoft).padding(24.dp)){Column{Eyebrow("ZONE: EAST QUAD / QUIET SANCTUARY");Text(place,Modifier.padding(top=20.dp),fontSize=36.sp,lineHeight=40.sp,fontWeight=FontWeight.ExtraBold);Row(verticalAlignment=Alignment.Bottom){Text("14",fontSize=50.sp,fontWeight=FontWeight.ExtraBold);Text("%",Modifier.padding(bottom=5.dp),fontSize=36.sp);Text(" ghost town",fontSize=18.sp,fontWeight=FontWeight.Bold,color=LavenderDeep,modifier=Modifier.padding(start=8.dp,bottom=7.dp))};Spacer(Modifier.height(14.dp));PillTag("deep focus mode",Color.White.copy(.82f));Spacer(Modifier.weight(1f));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){SmallStat("28 dB · Whisper","Noise");SmallStat("92% free","Outlets");SmallStat("68°F optimal","AC")}}}
-   Box(Modifier.fillMaxWidth().padding(top=16.dp).clip(RoundedCornerShape(24.dp)).background(LavenderSoft).padding(16.dp)){Column{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("Optimal Window Detected",fontSize=12.sp,fontWeight=FontWeight.Bold);Text("LIVE MODEL",fontSize=10.sp,color=Muted)};Text("Right now is your golden hour. Crowd is expected to rise later this evening.",Modifier.padding(top=8.dp),fontSize=14.sp,lineHeight=20.sp,color=Muted)}}
-   Text("Today's Crowd Curve",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);CrowdChart()
-   Text("Floor Breakdown",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold)
-   InfoRow("1F Social & Commons","58% OKAY",Coral);InfoRow("2F Stacks & Periodicals","24% CHILL",Sage);InfoRow("3F Deep Silent Zone","14% EMPTY",Sage);InfoRow("B1 Tech & Media Lab","10% EMPTY",Sage)
-   Text("Community Buzz",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);Quote("North-facing window pods have incredible afternoon sunshine right now.");Quote("Printing station on 2F was just restocked.")
-   Spacer(Modifier.height(90.dp))
-  }}
- }
-}
-
-@Composable private fun CrowdChart(){Canvas(Modifier.fillMaxWidth().height(160.dp).padding(top=12.dp)){val a=listOf(.2f,.25f,.34f,.55f,.45f,.28f,.2f,.7f,.82f,.55f,.3f,.18f);val w=size.width/a.size;a.forEachIndexed{i,v->drawRoundRect(if(i==5)CoralStrong else LavenderDeep.copy(.65f),Offset(i*w+5,size.height-v*size.height),Size(w-10,v*size.height),CornerRadius(6f,6f))}}}
-
+@Composable private fun PlaceDetail(place:PlaceData,crowd:Int,onBack:()->Unit,onCheckIn:()->Unit,onHome:()->Unit,onPulse:()->Unit,onProfile:()->Unit){
+ Scaffold(bottomBar={Box(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Button(onCheckIn,Modifier.fillMaxWidth().height(56.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("I am here — Check In",fontSize=16.sp,fontWeight=FontWeight.Bold);Text("  +10 pts",fontSize=13.sp)}}},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){Header(place.name,onBack,onProfile);Column(Modifier.padding(horizontal=20.dp)){Box(Modifier.fillMaxWidth().height(355.dp).clip(RoundedCornerShape(32.dp)).background(LavenderSoft).padding(24.dp)){Column{Eyebrow("ZONE: "+place.zone.uppercase());Text(place.name,Modifier.padding(top=20.dp),fontSize=36.sp,lineHeight=40.sp,fontWeight=FontWeight.ExtraBold);Row(verticalAlignment=Alignment.Bottom){Text(crowd.toString(),fontSize=50.sp,fontWeight=FontWeight.ExtraBold);Text("%",Modifier.padding(bottom=5.dp),fontSize=36.sp);Text(if(crowd<30)" quiet" else if(crowd<70)" flowing" else " busy",fontSize=18.sp,fontWeight=FontWeight.Bold,color=LavenderDeep,modifier=Modifier.padding(start=8.dp,bottom=7.dp))};Row(Modifier.padding(top=14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){PillTag(place.category,Color.White.copy(.82f));PillTag(statusFor(crowd),Color.White.copy(.82f))};Spacer(Modifier.weight(1f));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){SmallStat(place.noise,"Noise");SmallStat(place.outlets,"Outlets");SmallStat(place.temperature,"AC")}}};Box(Modifier.fillMaxWidth().padding(top=16.dp).clip(RoundedCornerShape(24.dp)).background(LavenderSoft).padding(16.dp)){Column{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("Optimal Window Detected",fontSize=12.sp,fontWeight=FontWeight.Bold);Text("LOCAL MODEL",fontSize=10.sp,color=Muted)};Text(if(crowd<30)"Right now is a calm pocket for focused work." else if(crowd<70)"Flow is moderate. You should still find a comfortable spot." else "Crowd is high. Consider waiting for a quieter window.",Modifier.padding(top=8.dp),fontSize=14.sp,lineHeight=20.sp,color=Muted)}};Text("Today's Crowd Curve",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);CrowdChart(crowd);Text("Zone Breakdown",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);InfoRow("Main "+place.category+" zone",crowd.toString()+"% "+statusFor(crowd),if(crowd>70)Coral else if(crowd>30)Butter else Sage);InfoRow("Noise profile",place.noise,WarmGray);InfoRow("Availability",place.outlets,Sage);Text("Community Buzz",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);place.buzz.forEach{Quote(it)};Spacer(Modifier.height(90.dp))}}}}
+@Composable private fun CrowdChart(crowd:Int){Canvas(Modifier.fillMaxWidth().height(160.dp).padding(top=12.dp)){val base=listOf(.2f,.25f,.34f,.55f,.45f,.28f,.2f,.7f,.82f,.55f,.3f,.18f);val scale=(crowd/70f).coerceIn(.35f,1.25f);val w=size.width/base.size;base.forEachIndexed{i,v->{val h=(v*scale).coerceIn(.08f,.95f)*size.height;drawRoundRect(if(i==5)CoralStrong else LavenderDeep.copy(.65f),Offset(i*w+5,size.height-h),Size(w-10,h),CornerRadius(6f,6f))}}}
 @Composable private fun InfoRow(a:String,b:String,c:Color){Row(Modifier.fillMaxWidth().padding(top=9.dp).clip(RoundedCornerShape(18.dp)).background(c.copy(.45f)).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Text(a,Modifier.weight(1f),fontSize=13.sp,fontWeight=FontWeight.Bold);PillTag(b,Color.White.copy(.9f))}}
-
-@Composable private fun Quote(t:String){Box(Modifier.fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(18.dp)).background(WarmGray).padding(15.dp)){Text("“$t”",fontSize=12.sp,lineHeight=18.sp,color=Muted)}}
-
+@Composable private fun Quote(t:String){Box(Modifier.fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(18.dp)).background(WarmGray).padding(15.dp)){Text("“"+t+"”",fontSize=12.sp,lineHeight=18.sp,color=Muted)}}
 @Composable private fun RowScope.SmallStat(a:String,b:String){Column(Modifier.weight(1f)){Text(b,fontSize=10.sp,color=Muted);Text(a,fontSize=11.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=3.dp))}}
 
 @Composable private fun CheckIn(onBack:()->Unit,onDone:()->Unit){
