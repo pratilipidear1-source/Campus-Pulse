@@ -203,20 +203,34 @@ class MainActivity:ComponentActivity(){
 
 @Composable private fun LiveMap(places:List<CampusPlace>,onHome:()->Unit,onPlace:(String)->Unit,onCheck:()->Unit,onPulse:()->Unit){
  Scaffold(bottomBar={BottomNav("map",onHome,{},onCheck,onPulse)},containerColor=Paper){p->
-  Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){Header("Aura Heatmap",onBack=onHome);Column(Modifier.padding(horizontal=20.dp)){
-   Eyebrow("LOCAL CAMPUS MAP");Text("Find the quiet pocket.",Modifier.padding(top=6.dp),fontSize=30.sp,fontWeight=FontWeight.ExtraBold)
-   Box(Modifier.fillMaxWidth().height(420.dp).padding(top=18.dp).clip(RoundedCornerShape(30.dp)).background(Ink)){
-    Canvas(Modifier.fillMaxSize()){
-     places.take(5).forEachIndexed{i,v->{val x=.18f+(i*.19f);val y=.22f+(i%2)*.30f;drawCircle(crowdColor(v.crowd).copy(.45f),65f+v.crowd*.5f,Offset(size.width*x,size.height*y))}
-     for(i in 0..7)drawLine(Color.White.copy(.07f),Offset(i*size.width/7f,0f),Offset(i*size.width/7f,size.height),1f)
-     for(i in 0..8)drawLine(Color.White.copy(.06f),Offset(0f,i*size.height/8f),Offset(size.width,i*size.height/8f),1f)
+  Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){
+   Header("Aura Heatmap",onBack=onHome)
+   Column(Modifier.padding(horizontal=20.dp)){
+    Eyebrow("LOCAL CAMPUS MAP")
+    Text("Find the quiet pocket.",Modifier.padding(top=6.dp),fontSize=30.sp,fontWeight=FontWeight.ExtraBold)
+    Box(Modifier.fillMaxWidth().height(420.dp).padding(top=18.dp).clip(RoundedCornerShape(30.dp)).background(Ink)){
+     Canvas(Modifier.fillMaxSize()){
+      places.take(5).forEachIndexed { i,v ->
+       val x=.18f+(i*.19f)
+       val y=.22f+(i%2)*.30f
+       drawCircle(crowdColor(v.crowd).copy(.45f),65f+v.crowd*.5f,Offset(size.width*x,size.height*y))
+      }
+      for(i in 0..7)drawLine(Color.White.copy(.07f),Offset(i*size.width/7f,0f),Offset(i*size.width/7f,size.height),1f)
+      for(i in 0..8)drawLine(Color.White.copy(.06f),Offset(0f,i*size.height/8f),Offset(size.width,i*size.height/8f),1f)
+     }
+     Row(Modifier.align(Alignment.TopStart).padding(14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){
+      PillTag("EMPTY",Sage);PillTag("OKAY",Butter);PillTag("PACKED",Coral)
+     }
+     places.take(3).forEachIndexed { i,v ->
+      MapMarker(v.name,.18f+i*.25f,.30f+(i%2)*.34f,crowdColor(v.crowd)){onPlace(v.name)}
+     }
     }
-    Row(Modifier.align(Alignment.TopStart).padding(14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){PillTag("EMPTY",Sage);PillTag("OKAY",Butter);PillTag("PACKED",Coral)}
-    places.take(3).forEachIndexed{i,v->MapMarker(v.name,.18f+i*.25f,.30f+(i%2)*.34f,crowdColor(v.crowd)){onPlace(v.name)}}
+    Spacer(Modifier.height(18.dp))
+    Section("NEARBY PULSE","tap a zone")
+    places.forEach { VenueRow(it,onPlace) }
+    Spacer(Modifier.height(25.dp))
    }
-   Spacer(Modifier.height(18.dp));Section("NEARBY PULSE","tap a zone");places.forEach{VenueRow(it,onPlace)}
-   Spacer(Modifier.height(25.dp))
-  }}
+  }
  }
 }
 @Composable private fun MapMarker(label:String,x:Float,y:Float,c:Color,onClick:()->Unit){Column(Modifier.offset(x=(330*x).dp,y=(380*y).dp).clickable(onClick=onClick),horizontalAlignment=Alignment.CenterHorizontally){Box(Modifier.size(34.dp).clip(CircleShape).background(c),contentAlignment=Alignment.Center){Icon(Icons.Default.LocationOn,null,tint=Ink,modifier=Modifier.size(18.dp))};Text(label,fontSize=9.sp,fontWeight=FontWeight.Bold,color=Paper,modifier=Modifier.padding(top=2.dp))}}
