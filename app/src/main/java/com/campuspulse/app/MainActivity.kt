@@ -173,14 +173,14 @@ class MainActivity:ComponentActivity(){
 }
 
 @Composable private fun Onboarding(next:()->Unit){
- Column(Modifier.fillMaxSize().background(Paper).padding(horizontal=20.dp)){
+ Column(Modifier.fillMaxSize().background(Paper).statusBarsPadding().padding(horizontal=20.dp)){
   Row(Modifier.fillMaxWidth().height(64.dp),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){Eyebrow("ONBOARDING");Text("Step 01 / 03",fontSize=11.sp,color=Muted)}
-  Box(Modifier.fillMaxWidth().height(350.dp),contentAlignment=Alignment.Center){PetalGraphic()}
+  Box(Modifier.fillMaxWidth().height(285.dp),contentAlignment=Alignment.Center){PetalGraphic(Modifier.size(220.dp))}
   Eyebrow("CAMPUS PULSE RADAR")
   Text("Stop guessing.\nStart knowing.",Modifier.padding(top=11.dp),fontSize=36.sp,lineHeight=39.sp,fontWeight=FontWeight.ExtraBold,letterSpacing=(-1.8).sp)
   Text("Local crowd radar, seat telemetry, and campus flow delivered straight to your pocket.",Modifier.padding(top=15.dp),fontSize=14.sp,lineHeight=22.sp,color=Muted)
   Row(Modifier.fillMaxWidth().padding(top=28.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){MiniCard("Main Library","18% Full",Sage);MiniCard("Dining Hall","Rush Hour",CoralStrong)}
-  Row(Modifier.fillMaxWidth().padding(top=30.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){StepBar();Pill("Next",next)}
+  Row(Modifier.fillMaxWidth().padding(top=22.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){StepBar();Pill("Next",next)}
  }
 }
 @Composable private fun RowScope.MiniCard(a:String,b:String,c:Color){Column(Modifier.weight(1f).height(72.dp).clip(RoundedCornerShape(16.dp)).background(WarmGray).padding(14.dp),verticalArrangement=Arrangement.SpaceBetween){Text(a,fontSize=11.sp,color=Muted);Row(verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(8.dp).clip(CircleShape).background(c));Text(b,Modifier.padding(start=8.dp),fontSize=13.sp,fontWeight=FontWeight.Bold)}}}
@@ -198,7 +198,7 @@ class MainActivity:ComponentActivity(){
     error->ErrorState{error=false}
     places.isEmpty()->EmptyState{onRefresh()}
     else->{
-     Text("hey srijoy,",Modifier.padding(top=4.dp),fontSize=36.sp,fontWeight=FontWeight.ExtraBold)
+     Text("hey, campus scout",Modifier.padding(top=4.dp),fontSize=36.sp,fontWeight=FontWeight.ExtraBold)
      Text("your campus flow, in one glance",fontSize=14.sp,color=Muted)
      Spacer(Modifier.height(20.dp))
      val busiest=places.maxByOrNull{it.crowd}?:places.first()
@@ -207,7 +207,10 @@ class MainActivity:ComponentActivity(){
      Row(horizontalArrangement=Arrangement.spacedBy(14.dp)){ActionTile("Check in","update a crowd report",Butter,Icons.Default.LocationOn,onCheck);ActionTile("Live Map","explore campus zones",Ink,Icons.Default.Map,onMap,true)}
      Spacer(Modifier.height(24.dp));Section("LIVE NOW","local demo state")
      places.forEach{VenueRow(it,onPlace)}
-     Spacer(Modifier.height(20.dp));Box(Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(28.dp)).background(Color(0xFFE9E3F8)),contentAlignment=Alignment.BottomStart){Column(Modifier.padding(18.dp)){Text("Campus flow at a glance",fontSize=15.sp,fontWeight=FontWeight.Bold);Text("Reports are stored locally in this frontend-only build.",fontSize=12.sp,color=Muted,modifier=Modifier.padding(top=4.dp))}}
+     Spacer(Modifier.height(20.dp));Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Color(0xFFE9E3F8)).clickable{onPulse()}.padding(18.dp),verticalAlignment=Alignment.CenterVertically){
+ Column(Modifier.weight(1f)){Text("Your campus contribution",fontSize=15.sp,fontWeight=FontWeight.Bold);Text("Open Pulse to see points, streak and reports.",fontSize=12.sp,color=Muted,modifier=Modifier.padding(top=4.dp))}
+ Icon(Icons.Default.ChevronRight,"Open Pulse",tint=Ink)
+}
      Spacer(Modifier.height(24.dp))
     }
    }
@@ -274,11 +277,13 @@ class MainActivity:ComponentActivity(){
 @Composable private fun PlaceDetail(place:CampusPlace,onBack:()->Unit,onCheck:()->Unit){
  Scaffold(bottomBar={Box(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Button(onCheck,Modifier.fillMaxWidth().height(56.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("I am here — Check In",fontSize=16.sp,fontWeight=FontWeight.Bold);Text("  +10 pts",fontSize=13.sp)}}},containerColor=Paper){p->
   Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){Header(place.name,onBack);Column(Modifier.padding(horizontal=20.dp)){
-   Box(Modifier.fillMaxWidth().height(340.dp).clip(RoundedCornerShape(32.dp)).background(LavenderSoft).padding(24.dp)){Column{Eyebrow(("ZONE: "+place.zone).uppercase());Text(place.name,Modifier.padding(top=18.dp),fontSize=34.sp,lineHeight=40.sp,fontWeight=FontWeight.ExtraBold);Row(verticalAlignment=Alignment.Bottom){Text(place.crowd.toString(),fontSize=50.sp,fontWeight=FontWeight.ExtraBold);Text("%",Modifier.padding(bottom=5.dp),fontSize=36.sp);Text(crowdState(place.crowd).lowercase(),fontSize=18.sp,fontWeight=FontWeight.Bold,color=LavenderDeep,modifier=Modifier.padding(start=8.dp,bottom=7.dp))};Spacer(Modifier.height(12.dp));PillTag(place.category,Color.White.copy(.82f));Spacer(Modifier.weight(1f));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){SmallStat(place.noise,"Noise");SmallStat(place.outlets,"Outlets");SmallStat(place.climate,"Climate")}}}
+   Box(Modifier.fillMaxWidth().height(275.dp).clip(RoundedCornerShape(32.dp)).background(LavenderSoft).padding(24.dp)){Column{Eyebrow(("ZONE: "+place.zone).uppercase());Text(place.name,Modifier.padding(top=18.dp),fontSize=34.sp,lineHeight=40.sp,fontWeight=FontWeight.ExtraBold);Row(verticalAlignment=Alignment.Bottom){Text(place.crowd.toString(),fontSize=50.sp,fontWeight=FontWeight.ExtraBold);Text("%",Modifier.padding(bottom=5.dp),fontSize=36.sp);Text(crowdState(place.crowd).lowercase(),fontSize=18.sp,fontWeight=FontWeight.Bold,color=LavenderDeep,modifier=Modifier.padding(start=8.dp,bottom=7.dp))};Spacer(Modifier.height(12.dp));PillTag(place.category,Color.White.copy(.82f));Spacer(Modifier.weight(1f));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){SmallStat(place.noise,"Noise");SmallStat(place.outlets,"Outlets");SmallStat(place.climate,"Climate")}}}
    Box(Modifier.fillMaxWidth().padding(top=16.dp).clip(RoundedCornerShape(24.dp)).background(LavenderSoft).padding(16.dp)){Column{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("Local Demo State",fontSize=12.sp,fontWeight=FontWeight.Bold);Text("FRONTEND ONLY",fontSize=10.sp,color=Muted)};Text("This venue has its own crowd state. Check-in changes it locally and the value persists after restart.",Modifier.padding(top=8.dp),fontSize=14.sp,lineHeight=20.sp,color=Muted)}}
-   Text("Today's Crowd Curve",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);CrowdChart(place.crowd)
+   Text("Demo Crowd Pattern",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);CrowdChart(place.crowd)
    Text("Venue Snapshot",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);InfoRow("Current occupancy",place.crowd.toString()+"% "+crowdState(place.crowd),crowdColor(place.crowd));InfoRow("Zone",place.zone,Lavender);InfoRow("Category",place.category,WarmGray)
-   Text("Community Buzz",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);Quote(place.description);Quote("Demo reports are stored locally on this device.")
+   Text("Community Buzz",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);Quote(place.description)
+Box(Modifier.fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(18.dp)).background(WarmGray).padding(15.dp)){Column{Text("Latest ambient notes",fontSize=12.sp,fontWeight=FontWeight.Bold);Text(tagSummary(place.ambientTags),Modifier.padding(top=5.dp),fontSize=12.sp,color=Muted)}}
+Quote("Local demo state · future versions can connect this venue to live reports.")
    Spacer(Modifier.height(90.dp))
   }}
  }
@@ -288,21 +293,72 @@ class MainActivity:ComponentActivity(){
 @Composable private fun Quote(t:String){Box(Modifier.fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(18.dp)).background(WarmGray).padding(15.dp)){Text("“"+t+"”",fontSize=12.sp,lineHeight=18.sp,color=Muted)}}
 @Composable private fun RowScope.SmallStat(a:String,b:String){Column(Modifier.weight(1f)){Text(b,fontSize=10.sp,color=Muted);Text(a,fontSize=11.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=3.dp))}}
 
-@Composable private fun CheckIn(place:CampusPlace,onBack:()->Unit,onDone:(Int)->Unit){
+@Composable private fun CheckIn(place:CampusPlace,onBack:()->Unit,onDone:(Int,Set<String>)->Unit){
  var selected by rememberSaveable{mutableIntStateOf(1)}
- val options=listOf("Chill / Empty" to "Seats everywhere, walk-in ease, whisper quiet.","Moderate / Okay" to "Decent spots, moderate daytime buzz, brisk line.","Slammed / Packed" to "No free tables, long queues, energetic sound level.")
+ val options=listOf("Chill / Empty" to "15% · seats easy to find","Moderate / Okay" to "50% · a few good spots","Slammed / Packed" to "85% · queues and tight seating")
  val tags=listOf("🔌 Outlets open","❄️ AC is frosty","🤫 Pure silence","🔊 Rising noise")
- var selectedTags by rememberSaveable{mutableStateOf(setOf<String>())}
- Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).background(Paper)){Header("Tactile Telemetry",onBack);Box(Modifier.fillMaxWidth().height(260.dp).background(Color(0xFFDDD9D2)),contentAlignment=Alignment.Center){PetalGraphic(Modifier.size(170.dp))}
-  Column(Modifier.padding(horizontal=20.dp)){Spacer(Modifier.height(16.dp));Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(WarmGray).padding(8.dp),verticalAlignment=Alignment.CenterVertically){Icon(Icons.Default.LocationOn,null,Modifier.size(16.dp));Text("Frontend demo · "+place.name,Modifier.weight(1f).padding(start=8.dp),fontSize=11.sp);Text("Ready",fontSize=11.sp,fontWeight=FontWeight.Bold)}
-   Text("How’s the crowd\nright now?",Modifier.padding(top=22.dp),fontSize=36.sp,lineHeight=39.sp,fontWeight=FontWeight.ExtraBold);Text("Your report updates this venue instantly in the prototype.",Modifier.padding(top=8.dp),fontSize=14.sp,lineHeight=20.sp,color=Muted);Spacer(Modifier.height(22.dp))
+ var selectedTags by rememberSaveable{mutableStateOf(place.ambientTags)}
+ Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).background(Paper).statusBarsPadding()){
+  Header("Tactile Telemetry",onBack)
+  Box(Modifier.fillMaxWidth().height(190.dp).background(Color(0xFFDDD9D2)),contentAlignment=Alignment.Center){PetalGraphic(Modifier.size(135.dp))}
+  Column(Modifier.padding(horizontal=20.dp)){
+   Spacer(Modifier.height(14.dp))
+   Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(WarmGray).padding(10.dp),verticalAlignment=Alignment.CenterVertically){
+    Icon(Icons.Default.LocationOn,null,Modifier.size(16.dp))
+    Text(place.name,Modifier.weight(1f).padding(start=8.dp),fontSize=12.sp,fontWeight=FontWeight.Bold)
+    PillTag("LOCAL DEMO",Sage)
+   }
+   Text("How’s the crowd\nright now?",Modifier.padding(top=18.dp),fontSize=34.sp,lineHeight=37.sp,fontWeight=FontWeight.ExtraBold)
+   Text("Choose the condition that best matches what you see. This updates only the local prototype state.",Modifier.padding(top=7.dp),fontSize=13.sp,lineHeight=19.sp,color=Muted)
+   Spacer(Modifier.height(14.dp))
    options.forEachIndexed{i,o->Selector(o.first,o.second,selected==i){selected=i}}
-   Spacer(Modifier.height(20.dp));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("Ambient Micro-tags",fontSize=12.sp,fontWeight=FontWeight.Bold);Text("Tap all that apply",fontSize=12.sp,color=Muted)}
+   Spacer(Modifier.height(18.dp))
+   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("Ambient Micro-tags",fontSize=12.sp,fontWeight=FontWeight.Bold);Text("Optional",fontSize=12.sp,color=Muted)}
    Row(Modifier.fillMaxWidth().padding(top=10.dp).horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)){tags.forEach{tag->SelectableTag(tag,selectedTags.contains(tag)){selectedTags=if(selectedTags.contains(tag))selectedTags-tag else selectedTags+tag}}}
-   Button({onDone(selected)},Modifier.fillMaxWidth().padding(top=20.dp).height(58.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("Submit Report  •  +10 Pulse Points",fontWeight=FontWeight.Bold)}
-   Text("Saved locally on this device · no database or live service used",Modifier.fillMaxWidth().padding(vertical=14.dp),fontSize=10.sp,color=Muted,textAlign=TextAlign.Center);Spacer(Modifier.height(30.dp))
+   Button({onDone(selected,selectedTags)},Modifier.fillMaxWidth().padding(top=20.dp).height(58.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Icon(Icons.Default.CheckCircle,null,modifier=Modifier.size(18.dp));Text("  Submit Report  •  +10 Pulse Points",fontWeight=FontWeight.Bold)}
+   Text("Saved locally on this device · no database or live service used",Modifier.fillMaxWidth().padding(vertical=12.dp),f@Composable private fun VenuePicker(places:List<CampusPlace>,onBack:()->Unit,onContinue:(String)->Unit){
+ Scaffold(containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
+  Header("Choose Venue",onBack)
+  Eyebrow("CHECK-IN")
+  Text("Where are you right now?",Modifier.padding(top=8.dp),fontSize=32.sp,fontWeight=FontWeight.ExtraBold)
+  Text("Pick the place you want your local report to update.",Modifier.padding(top=6.dp),fontSize=13.sp,color=Muted)
+  Spacer(Modifier.height(18.dp))
+  var selected by rememberSaveable{mutableStateOf(places.firstOrNull()?.name?:"")}
+  places.forEach{place->
+   val active=selected==place.name
+   Row(Modifier.fillMaxWidth().padding(bottom=10.dp).clip(RoundedCornerShape(22.dp)).background(if(active)LavenderSoft else WarmGray).clickable{selected=place.name}.padding(16.dp),verticalAlignment=Alignment.CenterVertically){
+    Box(Modifier.size(48.dp).clip(RoundedCornerShape(15.dp)).background(crowdColor(place.crowd).copy(.75f)),contentAlignment=Alignment.Center){Text(place.crowd.toString()+"%",fontSize=12.sp,fontWeight=FontWeight.ExtraBold)}
+    Column(Modifier.weight(1f).padding(start=12.dp)){Text(place.name,fontSize=16.sp,fontWeight=FontWeight.Bold);Text(place.category+" · "+crowdState(place.crowd),fontSize=11.sp,color=Muted,modifier=Modifier.padding(top=3.dp))}
+    Icon(if(active)Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,null,tint=if(active)Ink else Muted)
+   }
   }
+  Button({if(selected.isNotBlank())onContinue(selected)},Modifier.fillMaxWidth().height(56.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("Continue to Report",fontWeight=FontWeight.Bold);Icon(Icons.Default.ArrowForward,null,modifier=Modifier.padding(start=8.dp))}
+  Spacer(Modifier.height(25.dp))
+ }}
+}
+
+@Composable private fun ReportSuccess(venue:String,level:Int,points:Int,onView:()->Unit,onAnother:()->Unit){
+ val label=when(level){0->"EMPTY";1->"OKAY";else->"PACKED"}
+ val color=when(level){0->Sage;1->Butter;else->CoralStrong}
+ Column(Modifier.fillMaxSize().background(Paper).statusBarsPadding().padding(20.dp),horizontalAlignment=Alignment.CenterHorizontally){
+  Spacer(Modifier.height(65.dp))
+  Box(Modifier.size(88.dp).clip(CircleShape).background(color),contentAlignment=Alignment.Center){Icon(Icons.Default.CheckCircle,null,tint=Ink,modifier=Modifier.size(48.dp))}
+  Eyebrow("REPORT SAVED")
+  Text("Nice pulse.",Modifier.padding(top=12.dp),fontSize=38.sp,fontWeight=FontWeight.ExtraBold)
+  Text("Your local report updated the demo state for",Modifier.padding(top=7.dp),fontSize=13.sp,color=Muted,textAlign=TextAlign.Center)
+  Text(venue,Modifier.padding(top=3.dp),fontSize=18.sp,fontWeight=FontWeight.Bold,textAlign=TextAlign.Center)
+  Row(Modifier.padding(top=18.dp).clip(RoundedCornerShape(50.dp)).background(color.copy(.55f)).padding(horizontal=16.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically){Text(label,fontWeight=FontWeight.ExtraBold);Text("  ·  +10 pts",fontSize=12.sp)}
+  Text("Total Pulse Points: $points",Modifier.padding(top=14.dp),fontSize=13.sp,color=Muted)
+  Spacer(Modifier.weight(1f))
+  Button(onClick=onView,Modifier.fillMaxWidth().height(54.dp),shape=RoundedCornerShape(50.dp),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("View Updated Venue",fontWeight=FontWeight.Bold)}
+  OutlinedButton(onClick=onAnother,Modifier.fillMaxWidth().padding(top=10.dp).height(52.dp),shape=RoundedCornerShape(50.dp)){Text("Report Another Place")}
+  Spacer(Modifier.height(18.dp))
  }
+}
+
+ontSize=10.sp,color=Muted,textAlign=TextAlign.Center)
+   Spacer(Modifier.height(24.dp))
+  }
 }
 @Composable private fun Selector(title:String,desc:String,active:Boolean,onClick:()->Unit){
  Column(Modifier.fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(24.dp)).background(if(active)Color(0xFFDED8F4) else WarmGray).clickable(onClick=onClick).padding(24.dp)){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){PillTag(if(title.startsWith("Chill"))"< 30% OCCUPANCY" else if(title.startsWith("Moderate"))"30–70% OCCUPANCY" else "> 70% OCCUPANCY",Color.White.copy(.8f));Icon(if(active)Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,null,tint=if(active)Ink else Muted)};Text(title,Modifier.padding(top=12.dp),fontSize=20.sp,fontWeight=FontWeight.Bold);Text(desc,Modifier.padding(top=4.dp),fontSize=13.sp,lineHeight=20.sp,color=Muted)}
@@ -323,7 +379,7 @@ class MainActivity:ComponentActivity(){
 
 @Composable private fun ProfileScreen(points:Int,streak:Int,reports:Int,onHome:()->Unit,onMap:()->Unit,onCheck:()->Unit,onPulse:()->Unit,onReset:()->Unit){
  Scaffold(bottomBar={BottomNav("profile",onHome,onMap,onCheck,onPulse)},containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
-  Header("Profile",onBack=onHome);Box(Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(30.dp)).background(Lavender),contentAlignment=Alignment.Center){Column(horizontalAlignment=Alignment.CenterHorizontally){Box(Modifier.size(58.dp).clip(CircleShape).background(Ink),contentAlignment=Alignment.Center){Icon(Icons.Default.Person,null,tint=Paper)};Text("srijoy",Modifier.padding(top=10.dp),fontSize=22.sp,fontWeight=FontWeight.ExtraBold);Text("Campus Pulse scout",fontSize=12.sp,color=Muted)}}
+  Header("Profile",onBack=onHome);Box(Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(30.dp)).background(Lavender),contentAlignment=Alignment.Center){Column(horizontalAlignment=Alignment.CenterHorizontally){Box(Modifier.size(58.dp).clip(CircleShape).background(Ink),contentAlignment=Alignment.Center){Icon(Icons.Default.Person,null,tint=Paper)};Text("Campus Scout",Modifier.padding(top=10.dp),fontSize=22.sp,fontWeight=FontWeight.ExtraBold);Text("Campus Pulse scout",fontSize=12.sp,color=Muted)}}
   Spacer(Modifier.height(18.dp));Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){MetricCard(points.toString(),"Points",LavenderSoft);MetricCard("🔥 "+streak,"Streak",Coral);MetricCard(reports.toString(),"Reports",Sage)}
   Spacer(Modifier.height(22.dp));Section("DEMO SETTINGS","local");Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(WarmGray).padding(16.dp),verticalAlignment=Alignment.CenterVertically){Icon(Icons.Default.Storage,null);Column(Modifier.weight(1f).padding(start=12.dp)){Text("Local persistence",fontWeight=FontWeight.Bold);Text("Enabled on this device",fontSize=11.sp,color=Muted)};PillTag("ON",Sage)}
   Button(onClick=onReset,Modifier.fillMaxWidth().padding(top=14.dp).height(52.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("Reset demo data")}
