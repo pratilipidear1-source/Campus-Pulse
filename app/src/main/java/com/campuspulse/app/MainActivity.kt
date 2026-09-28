@@ -301,6 +301,7 @@ Quote("Local demo state · future versions can connect this venue to live report
    Text("Saved locally on this device · no database or live service used",Modifier.fillMaxWidth().padding(vertical=12.dp),fontSize=10.sp,color=Muted,textAlign=TextAlign.Center);Spacer(Modifier.height(24.dp))
   }
 }
+}
 @Composable private fun VenuePicker(places:List<CampusPlace>,onBack:()->Unit,onContinue:(String)->Unit){
  var selected by rememberSaveable{mutableStateOf(places.firstOrNull()?.name?:"")}
  Scaffold(containerColor=Paper){p->Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState()).padding(horizontal=20.dp)){
