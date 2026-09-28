@@ -24,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -152,7 +153,7 @@ private val places=listOf(
  }
 }
 
-@Composable private fun ActionTile(title:String,sub:String,bg:Color,icon:ImageVector,onClick:()->Unit,dark:Boolean=false){
+@Composable private fun RowScope.ActionTile(title:String,sub:String,bg:Color,icon:ImageVector,onClick:()->Unit,dark:Boolean=false){
  Column(Modifier.weight(1f).height(175.dp).clip(RoundedCornerShape(24.dp)).background(bg).clickable(onClick=onClick).padding(20.dp)){
   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Icon(icon,null,tint=if(dark)Paper else Ink,modifier=Modifier.size(18.dp));PillTag(if(dark)"LIVE" else "QUICK",if(dark)Color.White.copy(.12f) else Color.White.copy(.55f),dark)}
   Spacer(Modifier.weight(1f));Text(title,fontSize=21.sp,fontWeight=FontWeight.Bold,color=if(dark)Paper else Ink);Text(sub,fontSize=11.sp,color=if(dark)Color.White.copy(.7f) else Muted,modifier=Modifier.padding(top=4.dp))
@@ -199,7 +200,7 @@ private val places=listOf(
 @Composable private fun PlaceDetail(place:String,onBack:()->Unit,onCheckIn:()->Unit){
  Scaffold(bottomBar={Box(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Button(onCheckIn,Modifier.fillMaxWidth().height(56.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("I am here — Check In",fontSize=16.sp,fontWeight=FontWeight.Bold);Text("  +10 pts",fontSize=13.sp)}}},containerColor=Paper){p->
   Column(Modifier.fillMaxSize().padding(p).verticalScroll(rememberScrollState())){Header("Studio Green Library",onBack);Column(Modifier.padding(horizontal=20.dp)){
-   Box(Modifier.fillMaxWidth().height(355.dp).clip(RoundedCornerShape(32.dp)).background(LavenderSoft).padding(24.dp)){Column{Eyebrow("ZONE: EAST QUAD / QUIET SANCTUARY");Text(place,Modifier.padding(top=20.dp),fontSize=36.sp,lineHeight=40.sp,fontWeight=FontWeight.ExtraBold);Row(verticalAlignment=Alignment.Bottom){Text("14",fontSize=50.sp,fontWeight=FontWeight.ExtraBold);Text("%",fontSize=36.sp,Modifier.padding(bottom=5.dp));Text(" ghost town",fontSize=18.sp,fontWeight=FontWeight.Bold,color=LavenderDeep,modifier=Modifier.padding(start=8.dp,bottom=7.dp))};Spacer(Modifier.height(14.dp));PillTag("deep focus mode",Color.White.copy(.82f));Spacer(Modifier.weight(1f));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){SmallStat("28 dB · Whisper","Noise");SmallStat("92% free","Outlets");SmallStat("68°F optimal","AC")}}}
+   Box(Modifier.fillMaxWidth().height(355.dp).clip(RoundedCornerShape(32.dp)).background(LavenderSoft).padding(24.dp)){Column{Eyebrow("ZONE: EAST QUAD / QUIET SANCTUARY");Text(place,Modifier.padding(top=20.dp),fontSize=36.sp,lineHeight=40.sp,fontWeight=FontWeight.ExtraBold);Row(verticalAlignment=Alignment.Bottom){Text("14",fontSize=50.sp,fontWeight=FontWeight.ExtraBold);Text("%",Modifier.padding(bottom=5.dp),fontSize=36.sp);Text(" ghost town",fontSize=18.sp,fontWeight=FontWeight.Bold,color=LavenderDeep,modifier=Modifier.padding(start=8.dp,bottom=7.dp))};Spacer(Modifier.height(14.dp));PillTag("deep focus mode",Color.White.copy(.82f));Spacer(Modifier.weight(1f));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){SmallStat("28 dB · Whisper","Noise");SmallStat("92% free","Outlets");SmallStat("68°F optimal","AC")}}}
    Box(Modifier.fillMaxWidth().padding(top=16.dp).clip(RoundedCornerShape(24.dp)).background(LavenderSoft).padding(16.dp)){Column{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text("Optimal Window Detected",fontSize=12.sp,fontWeight=FontWeight.Bold);Text("LIVE MODEL",fontSize=10.sp,color=Muted)};Text("Right now is your golden hour. Crowd is expected to rise later this evening.",Modifier.padding(top=8.dp),fontSize=14.sp,lineHeight=20.sp,color=Muted)}}
    Text("Today's Crowd Curve",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold);CrowdChart()
    Text("Floor Breakdown",Modifier.padding(top=20.dp),fontSize=21.sp,fontWeight=FontWeight.Bold)
@@ -210,13 +211,13 @@ private val places=listOf(
  }
 }
 
-@Composable private fun CrowdChart(){Canvas(Modifier.fillMaxWidth().height(160.dp).padding(top=12.dp)){val a=listOf(.2f,.25f,.34f,.55f,.45f,.28f,.2f,.7f,.82f,.55f,.3f,.18f);val w=size.width/a.size;a.forEachIndexed{i,v->drawRoundRect(if(i==5)CoralStrong else LavenderDeep.copy(.65f),Offset(i*w+5,size.height-v*size.height),Size(w-10,v*size.height),6f,6f)}}}
+@Composable private fun CrowdChart(){Canvas(Modifier.fillMaxWidth().height(160.dp).padding(top=12.dp)){val a=listOf(.2f,.25f,.34f,.55f,.45f,.28f,.2f,.7f,.82f,.55f,.3f,.18f);val w=size.width/a.size;a.forEachIndexed{i,v->drawRoundRect(if(i==5)CoralStrong else LavenderDeep.copy(.65f),Offset(i*w+5,size.height-v*size.height),Size(w-10,v*size.height),CornerRadius(6f,6f))}}}
 
 @Composable private fun InfoRow(a:String,b:String,c:Color){Row(Modifier.fillMaxWidth().padding(top=9.dp).clip(RoundedCornerShape(18.dp)).background(c.copy(.45f)).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Text(a,Modifier.weight(1f),fontSize=13.sp,fontWeight=FontWeight.Bold);PillTag(b,Color.White.copy(.9f))}}
 
 @Composable private fun Quote(t:String){Box(Modifier.fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(18.dp)).background(WarmGray).padding(15.dp)){Text("“$t”",fontSize=12.sp,lineHeight=18.sp,color=Muted)}}
 
-@Composable private fun SmallStat(a:String,b:String){Column(Modifier.weight(1f)){Text(b,fontSize=10.sp,color=Muted);Text(a,fontSize=11.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=3.dp))}}
+@Composable private fun RowScope.SmallStat(a:String,b:String){Column(Modifier.weight(1f)){Text(b,fontSize=10.sp,color=Muted);Text(a,fontSize=11.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=3.dp))}}
 
 @Composable private fun CheckIn(onBack:()->Unit,onDone:()->Unit){
  var selected by remember{mutableStateOf(1)}
@@ -243,5 +244,8 @@ private val places=listOf(
 @Composable private fun Pill(label:String,onClick:()->Unit){Button(onClick=onClick,shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink),contentPadding=PaddingValues(horizontal=20.dp,vertical=10.dp)){Text(label,fontSize=14.sp,fontWeight=FontWeight.SemiBold,color=Paper)}}
 
 @Composable private fun BottomNav(active:String,onHome:()->Unit,onMap:()->Unit,onCheckIn:()->Unit){
- NavigationBar(containerColor=Paper){NavigationBarItem(active=="home",onHome,{Icon(Icons.Default.Home,null)},{Text("Home")});NavigationBarItem(active=="map",onMap,{Icon(Icons.Default.Map,null)},{Text("Map")});NavigationBarItem(active=="check",onCheckIn,{Icon(Icons.Default.AddCircleOutline,null)},{Text("Check in")});NavigationBarItem(false,{}, {Icon(Icons.Default.EmojiEvents,null)},{Text("Pulse")})}
+ NavigationBar(containerColor=Paper){NavigationBarItem(selected=active=="home",onClick=onHome,icon={Icon(Icons.Default.Home,null)},label={Text("Home")})
+  NavigationBarItem(selected=active=="map",onClick=onMap,icon={Icon(Icons.Default.Map,null)},label={Text("Map")})
+  NavigationBarItem(selected=active=="check",onClick=onCheckIn,icon={Icon(Icons.Default.AddCircleOutline,null)},label={Text("Check in")})
+  NavigationBarItem(selected=false,onClick={},icon={Icon(Icons.Default.EmojiEvents,null)},label={Text("Pulse")})}
 }
