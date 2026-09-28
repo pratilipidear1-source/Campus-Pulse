@@ -247,12 +247,15 @@ class MainActivity:ComponentActivity(){
    Column(Modifier.padding(horizontal=20.dp)){
     Eyebrow("LOCAL CAMPUS MAP")
     Text("Find the quiet pocket.",Modifier.padding(top=6.dp),fontSize=30.sp,fontWeight=FontWeight.ExtraBold)
-    Box(Modifier.fillMaxWidth().height(420.dp).padding(top=18.dp).clip(RoundedCornerShape(30.dp)).background(Ink)){
+    Text("Tap a marker or venue card to inspect it.",Modifier.padding(top=5.dp),fontSize=12.sp,color=Muted)
+    BoxWithConstraints(Modifier.fillMaxWidth().height(390.dp).padding(top=16.dp).clip(RoundedCornerShape(30.dp)).background(Ink)){
+     val mapWidth=maxWidth.value
+     val mapHeight=390f
      Canvas(Modifier.fillMaxSize()){
-      places.take(5).forEachIndexed { i,v ->
-       val x=.18f+(i*.19f)
-       val y=.22f+(i%2)*.30f
-       drawCircle(crowdColor(v.crowd).copy(.45f),65f+v.crowd*.5f,Offset(size.width*x,size.height*y))
+      places.forEachIndexed { i,v ->
+       val x=.15f+(i*.17f)
+       val y=.22f+(i%2)*.28f
+       drawCircle(crowdColor(v.crowd).copy(.45f),55f+v.crowd*.42f,Offset(size.width*x,size.height*y))
       }
       for(i in 0..7)drawLine(Color.White.copy(.07f),Offset(i*size.width/7f,0f),Offset(i*size.width/7f,size.height),1f)
       for(i in 0..8)drawLine(Color.White.copy(.06f),Offset(0f,i*size.height/8f),Offset(size.width,i*size.height/8f),1f)
@@ -260,19 +263,26 @@ class MainActivity:ComponentActivity(){
      Row(Modifier.align(Alignment.TopStart).padding(14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){
       PillTag("EMPTY",Sage);PillTag("OKAY",Butter);PillTag("PACKED",Coral)
      }
-     places.take(3).forEachIndexed { i,v ->
-      MapMarker(v.name,.18f+i*.25f,.30f+(i%2)*.34f,crowdColor(v.crowd)){onPlace(v.name)}
+     places.forEachIndexed { i,v ->
+      val x=.15f+(i*.17f)
+      val y=.22f+(i%2)*.28f
+      MapMarker(v.name,x,y,crowdColor(v.crowd),mapWidth,mapHeight){onPlace(v.name)}
      }
     }
     Spacer(Modifier.height(18.dp))
     Section("NEARBY PULSE","tap a zone")
-    places.forEach { VenueRow(it,onPlace) }
+    places.forEach{VenueRow(it,onPlace)}
     Spacer(Modifier.height(25.dp))
    }
   }
  }
 }
-@Composable private fun MapMarker(label:String,x:Float,y:Float,c:Color,onClick:()->Unit){Column(Modifier.offset(x=(330*x).dp,y=(380*y).dp).clickable(onClick=onClick),horizontalAlignment=Alignment.CenterHorizontally){Box(Modifier.size(34.dp).clip(CircleShape).background(c),contentAlignment=Alignment.Center){Icon(Icons.Default.LocationOn,null,tint=Ink,modifier=Modifier.size(18.dp))};Text(label,fontSize=9.sp,fontWeight=FontWeight.Bold,color=Paper,modifier=Modifier.padding(top=2.dp))}}
+@Composable private fun MapMarker(label:String,x:Float,y:Float,c:Color,mapWidth:Float,mapHeight:Float,onClick:()->Unit){
+ Column(Modifier.offset(x=(mapWidth*x-17).dp,y=(mapHeight*y-17).dp).clickable(onClick=onClick),horizontalAlignment=Alignment.CenterHorizontally){
+  Box(Modifier.size(34.dp).clip(CircleShape).background(c),contentAlignment=Alignment.Center){Icon(Icons.Default.LocationOn,null,tint=Ink,modifier=Modifier.size(18.dp))}
+  Text(label,fontSize=8.sp,fontWeight=FontWeight.Bold,color=Paper,modifier=Modifier.padding(top=2.dp))
+ }
+}
 
 @Composable private fun PlaceDetail(place:CampusPlace,onBack:()->Unit,onCheck:()->Unit){
  Scaffold(bottomBar={Box(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Button(onCheck,Modifier.fillMaxWidth().height(56.dp),shape=RoundedCornerShape(50),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text("I am here — Check In",fontSize=16.sp,fontWeight=FontWeight.Bold);Text("  +10 pts",fontSize=13.sp)}}},containerColor=Paper){p->
