@@ -113,29 +113,37 @@ class MainActivity:ComponentActivity(){
  var points by rememberSaveable{mutableIntStateOf(c.prefs().getInt("points",0))}
  var streak by rememberSaveable{mutableIntStateOf(c.prefs().getInt("streak",0))}
  var reports by rememberSaveable{mutableIntStateOf(c.prefs().getInt("reports",0))}
+ var lastReportedVenue by rememberSaveable{mutableStateOf("Studio Green Library")}
+ var lastReportedLevel by rememberSaveable{mutableIntStateOf(1)}
  fun goPlace(name:String){placeName=name;screen="detail"}
+ fun openPicker(){screen="venuePicker"}
+ fun submitReport(level:Int,tags:Set<String>){
+  places=places.map{if(it.name==placeName)it.copy(crowd=crowdForReport(level),ambientTags=tags)else it}
+  points+=10
+  reports+=1
+  streak=updateLocalStreak(c)
+  saveData(c,points,streak,reports,places)
+  lastReportedVenue=placeName
+  lastReportedLevel=level
+  screen="success"
+ }
+ fun resetAll(){resetData(c);places=defaultPlaces;points=0;streak=0;reports=0;placeName="Studio Green Library";screen="home"}
  MaterialTheme(colorScheme=lightColorScheme(background=Paper,surface=Paper,primary=Ink)){
   Surface(Modifier.fillMaxSize(),color=Paper){
    when(screen){
     "onboarding"->Onboarding{screen="home"}
-    "home"->Home(places,{screen="map"},{goPlace(it)},{screen="checkin"},{screen="profile"},{screen="pulse"}){places=loadPlaces(c)}
-    "map"->LiveMap(places,{screen="home"},{goPlace(it)},{screen="checkin"},{screen="pulse"})
+    "home"->Home(places,{screen="map"},{goPlace(it)},{openPicker()},{screen="profile"},{screen="pulse"}){places=loadPlaces(c)}
+    "map"->LiveMap(places,{screen="home"},{goPlace(it)},{openPicker()},{screen="pulse"})
     "detail"->PlaceDetail(places.firstOrNull{it.name==placeName}?:defaultPlaces.first(),{screen="map"},{screen="checkin"})
-    "checkin"->CheckIn(places.firstOrNull{it.name==placeName}?:defaultPlaces.first(),{screen="detail"}){level->
-      val delta=when(level){0->-8;1->0;else->8}
-      places=places.map{if(it.name==placeName)it.copy(crowd=(it.crowd+delta).coerceIn(2,98))else it}
-      points+=10;streak+=1;reports+=1
-      saveData(c,points,streak,reports,places);screen="detail"
-    }
-    "pulse"->PulseScreen(points,streak,reports,{screen="home"},{screen="map"},{screen="checkin"},{screen="profile"})
-    "profile"->ProfileScreen(points,streak,reports,{screen="home"},{screen="map"},{screen="checkin"},{screen="pulse"}){
-      points=0;streak=0;reports=0;places=defaultPlaces;saveData(c,0,0,0,places)
-    }
+    "venuePicker"->VenuePicker(places,{screen="home"}){name->placeName=name;screen="checkin"}
+    "checkin"->CheckIn(places.firstOrNull{it.name==placeName}?:defaultPlaces.first(),{screen="detail"}){level,tags->submitReport(level,tags)}
+    "success"->ReportSuccess(lastReportedVenue,lastReportedLevel,points,{screen="detail"},{screen="venuePicker"})
+    "pulse"->PulseScreen(points,streak,reports,{screen="home"},{screen="map"},{openPicker()},{screen="profile"})
+    "profile"->ProfileScreen(points,streak,reports,{screen="home"},{screen="map"},{openPicker()},{screen="pulse"}){resetAll()}
    }
   }
  }
 }
-
 @Composable private fun PulseLogo(modifier:Modifier=Modifier){
  Canvas(modifier){
   val r=size.minDimension
