@@ -250,7 +250,7 @@ class MainActivity:ComponentActivity(){
      for(i in 0..8)drawLine(Color.White.copy(.06f),Offset(0f,i*size.height/8f),Offset(size.width,i*size.height/8f),1f)
     }
     Row(Modifier.align(Alignment.TopStart).padding(14.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){PillTag("EMPTY",Sage);PillTag("OKAY",Butter);PillTag("PACKED",Coral)}
-    places.forEachIndexed{i,v->{val x=.15f+(i*.17f);val y=.22f+(i%2)*.28f;MapMarker(v.name,x,y,crowdColor(v.crowd),mapWidth,mapHeight){onPlace(v.name)}}}
+    places.forEachIndexed{i,v->val x=.15f+(i*.17f);val y=.22f+(i%2)*.28f;MapMarker(v.name,x,y,crowdColor(v.crowd),mapWidth,mapHeight){onPlace(v.name)}}
    }
    Spacer(Modifier.height(18.dp));Section("NEARBY PULSE","tap a zone");places.forEach{VenueRow(it,onPlace)};Spacer(Modifier.height(25.dp))
   }
