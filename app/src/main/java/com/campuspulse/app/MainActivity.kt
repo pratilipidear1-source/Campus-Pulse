@@ -2,6 +2,9 @@ package com.campuspulse.app
 
 import android.content.Context
 import android.os.Bundle
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -50,7 +53,8 @@ private val WarmGray=Color(0xFFF1EEEA)
 
 data class CampusPlace(
  val name:String,val category:String,val zone:String,val crowd:Int,
- val noise:String,val outlets:String,val climate:String,val description:String
+ val noise:String,val outlets:String,val climate:String,val description:String,
+ val ambientTags:Set<String> = emptySet()
 )
 
 private val defaultPlaces=listOf(
@@ -62,14 +66,38 @@ private val defaultPlaces=listOf(
 )
 
 private fun Context.prefs()=getSharedPreferences("campus_pulse_local",Context.MODE_PRIVATE)
-private fun loadPlaces(c:Context)=defaultPlaces.map{p->p.copy(crowd=c.prefs().getInt("crowd_"+p.name,p.crowd))}
+private fun loadPlaces(c:Context)=defaultPlaces.map{p->
+ val tags=c.prefs().getStringSet("tags_"+p.name,emptySet())?:emptySet()
+ p.copy(crowd=c.prefs().getInt("crowd_"+p.name,p.crowd),ambientTags=tags)
+}
 private fun saveData(c:Context,points:Int,streak:Int,reports:Int,places:List<CampusPlace>){
  val e=c.prefs().edit().putInt("points",points).putInt("streak",streak).putInt("reports",reports)
- places.forEach{e.putInt("crowd_"+it.name,it.crowd)}
+ places.forEach{
+  e.putInt("crowd_"+it.name,it.crowd)
+  e.putStringSet("tags_"+it.name,it.ambientTags)
+ }
  e.apply()
+}
+private fun resetData(c:Context){c.prefs().edit().clear().apply()}
+private fun todayKey():String=SimpleDateFormat("yyyy-MM-dd",Locale.US).format(Date())
+private fun updateLocalStreak(c:Context):Int{
+ val p=c.prefs(); val today=todayKey(); val last=p.getString("last_checkin_date",null); val old=p.getInt("streak",0)
+ val sdf=SimpleDateFormat("yyyy-MM-dd",Locale.US)
+ val newStreak=when{
+  last==today->old
+  last!=null->{
+   val a=sdf.parse(last); val b=sdf.parse(today)
+   val days=((b.time-a.time)/(24L*60L*60L*1000L)).toInt()
+   if(days==1)old+1 else 1
+  }
+  else->1
+ }
+ p.edit().putString("last_checkin_date",today).putInt("streak",newStreak).apply(); return newStreak
 }
 private fun crowdState(p:Int)=when{p<30->"EMPTY";p<=70->"OKAY";else->"PACKED"}
 private fun crowdColor(p:Int)=when{p<30->Sage;p<=70->Butter;else->CoralStrong}
+private fun crowdForReport(level:Int)=when(level){0->15;1->50;else->85}
+private fun tagSummary(tags:Set<String>):String=if(tags.isEmpty())"No ambient notes yet" else tags.joinToString(" · "){it.substringAfter(" ").ifBlank{it}}
 
 class MainActivity:ComponentActivity(){
  override fun onCreate(savedInstanceState:Bundle?){
